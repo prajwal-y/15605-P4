@@ -16,7 +16,7 @@
  */
 /*@{*/
 
-#include <x86/keyhelp.h>
+#include <libx86/keyhelp.h>
 
 /**
  * This is returned as the upper bits of the result of
