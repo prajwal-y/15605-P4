@@ -73,7 +73,7 @@ UPDATE_METHOD = afs
 # A list of the test programs you want compiled in from the user/progs
 # directory.
 #
-STUDENTTESTS = beady_test agility_drill cvar_test join_specific_test largetest multitest switzerland thr_exit_join
+STUDENTTESTS =
 
 ###########################################################################
 # Data files provided by course staff to build into the RAM disk
@@ -107,11 +107,13 @@ THREAD_OBJS = malloc.o panic.o mutex.o asm.o cond_var.o thread.o rwlock.o list.o
 ###########################################################################
 # Object files for your syscall wrappers
 ###########################################################################
-SYSCALL_OBJS = print.o set_status.o vanish.o deschedule.o exec.o fork.o \
+SYSCALL_OBJS = sys_print.o set_status.o vanish.o deschedule.o sys_exec.o fork.o \
                getchar.o get_cursor_pos.o get_ticks.o gettid.o halt.o \
-			   make_runnable.o misbehave.o new_pages.o readfile.o readline.o \
+			   make_runnable.o misbehave.o new_pages.o readfile.o sys_readline.o \
 			   remove_pages.o set_cursor_pos.o set_term_color.o sleep.o \
-			   swexn.o task_vanish.o wait.o yield.o
+			   swexn.o task_vanish.o wait.o yield.o udriv_register.o \
+			   udriv_deregister.o udriv_send.o udriv_wait.o udriv_inb.o \
+			   udriv_outb.o udriv_mmap.o
 
 ###########################################################################
 # Object files for your automatic stack handling

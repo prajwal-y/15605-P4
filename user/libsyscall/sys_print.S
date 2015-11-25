@@ -10,9 +10,9 @@
  */
 #include <syscall_int.h>
 
-.global print
+.global sys_print
 
-print:
+sys_print:
     /* Setup */
     pushl %ebp          /* Old EBP */
     movl %esp,%ebp      /* New EBP */
