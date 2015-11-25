@@ -11,6 +11,7 @@
 #include <common/errors.h>
 #include <interrupts/idt_entry.h>
 #include <interrupts/interrupt_handlers.h>
+#include <interrupts/device_handlers.h>
 #include <asm.h>
 #include <list/list.h>
 #include <stddef.h>
@@ -34,7 +35,8 @@ int install_keyboard_handler() {
     if((retval = mutex_init(&readline_mutex)) < 0) {
 		return retval;
 	}
-    retval = add_idt_entry(keyboard_handler, KEY_IDT_ENTRY, TRAP_GATE, KERNEL_DPL);
+    retval = add_idt_entry(keyboard_device_handler, KEY_IDT_ENTRY, 
+							TRAP_GATE, KERNEL_DPL);
 	return retval;
 }
 

@@ -16,6 +16,8 @@ extern mutex_t readline_mutex;
 
 int install_keyboard_handler();
 
+void enqueue_scancode();
+
 int readchar();
 
 int nextline(char *buf, int len);

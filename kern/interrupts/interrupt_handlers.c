@@ -11,10 +11,13 @@
  */
 
 #include <asm.h>
+#include <udriv_kern.h>
+#include <udriv_registry.h>
 #include <asm/asm.h>
 #include <core/scheduler.h>
 #include <interrupts/idt_entry.h>
 #include <interrupts/interrupt_handlers.h>
+#include <interrupts/device_handlers.h>
 #include <interrupts/fault_handlers.h>
 #include <interrupts/fault_handlers_asm.h>
 #include <interrupt_defines.h>
@@ -26,6 +29,8 @@
 #include <syscall.h>
 #include <syscalls/syscall_util.h>
 #include <string.h>
+
+static int install_device_handlers();
 
 /*All the interrupts initialization*/
 static int install_divide_error_handler();
@@ -62,9 +67,12 @@ int install_handlers() {
     if((retval = initialize_timer(tickback)) < 0) {
 		return retval;
 	}
-    if((retval = install_keyboard_handler()) < 0) {
+
+	/* Install IDT entries for all devices */
+	if((retval = install_device_handlers()) < 0) {
 		return retval;
 	}
+
 	if((retval = install_divide_error_handler()) < 0) {
 		return retval;
 	}
@@ -119,6 +127,57 @@ int install_handlers() {
 	return retval;
 }
 
+/** @brief This function installs handlers for all the devices present
+ *  in udriv_table
+ *
+ *  @return int return value of add_idt_entry
+ */
+int install_device_handlers() {
+	int i;
+	int retval = 0;
+	for(i = 0; i < device_table_entries; i++) {
+		dev_spec_t device = device_table[i];
+		switch(device.id) {
+			case UDR_KEYBOARD:
+				retval = install_keyboard_handler();
+				if(retval < 0) {
+					return retval;
+				}
+				break;
+			case UDR_MOUSE:				
+				retval = add_idt_entry(mouse_device_handler, device.idt_slot,
+										TRAP_GATE, KERNEL_DPL);
+				if(retval < 0) {
+					return retval;
+				}
+				break;
+			case UDR_CONSOLE:
+				retval = add_idt_entry(console_device_handler, device.idt_slot,
+										TRAP_GATE, KERNEL_DPL);
+				if(retval < 0) {
+					return retval;
+				}
+				break;
+			case UDR_DEV_COM1:
+				retval = add_idt_entry(com1_device_handler, device.idt_slot,
+										TRAP_GATE, KERNEL_DPL);
+				if(retval < 0) {
+					return retval;
+				}
+				break;
+			case UDR_DEV_COM2:
+				retval = add_idt_entry(com2_device_handler, device.idt_slot,
+										TRAP_GATE, KERNEL_DPL);
+				if(retval < 0) {
+					return retval;
+				}
+				break;
+			default:
+				break;
+		}
+	}
+	return retval;
+}
 
 /** @brief this function installs a handler for divide by zero fault conditions
  *
