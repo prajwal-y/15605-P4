@@ -21,8 +21,7 @@ udriv_register:
     /* Body */
     movl %ebp,%esi   /* Move address ofebp to esi */
     add $8,%esi      /* We pass address of argument "packet" */
-    //int $UDRIV_REGISTER_INT
-	movl $-1, %eax
+    int $UDRIV_REGISTER_INT
 
     /* Finish */
     movl -4(%ebp),%esi  /* Restore ESI */

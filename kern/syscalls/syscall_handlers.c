@@ -17,6 +17,7 @@
 #include <syscalls/misc_syscalls.h>
 #include <syscalls/memory_syscalls.h>
 #include <syscalls/system_check_syscalls.h>
+#include <syscalls/udriv_syscalls.h>
 
 static int install_print_handler();
 static int install_fork_handler();
@@ -42,6 +43,15 @@ static int install_set_cursor_pos_handler();
 static int install_get_cursor_pos_handler();
 static int install_getchar_handler();
 static int install_memcheck_handler();
+
+/* udriv handlers */
+static int install_udriv_register_handler();
+static int install_udriv_deregister_handler();
+static int install_udriv_send_handler();
+static int install_udriv_wait_handler();
+static int install_udriv_inb_handler();
+static int install_udriv_outb_handler();
+static int install_udriv_mmap_handler();
 
 /** @brief The syscall handlers initialization function
  *
@@ -119,6 +129,27 @@ int install_syscall_handlers() {
 		return retval;
 	}
     if((retval = install_getchar_handler()) < 0) {
+		return retval;
+	}
+	if((retval = install_udriv_register_handler()) < 0) {
+		return retval;
+	}
+	if((retval = install_udriv_deregister_handler()) < 0) {
+		return retval;
+	}
+	if((retval = install_udriv_send_handler()) < 0) {
+		return retval;
+	}
+	if((retval = install_udriv_wait_handler()) < 0) {
+		return retval;
+	}
+	if((retval = install_udriv_inb_handler()) < 0) {
+		return retval;
+	}
+	if((retval = install_udriv_outb_handler()) < 0) {
+		return retval;
+	}
+	if((retval = install_udriv_mmap_handler()) < 0) {
 		return retval;
 	}
     return retval;
@@ -320,5 +351,70 @@ int install_get_cursor_pos_handler() {
  */
 int install_getchar_handler() {
 	return add_idt_entry(getchar_handler, GETCHAR_INT, 
+                         TRAP_GATE, USER_DPL);
+}
+
+/** @brief Function to install a handler for udriv_register
+ *  syscall
+ *
+ *  @return int return value of add_idt_entry
+ */
+int install_udriv_register_handler() {
+	return add_idt_entry(udriv_register_handler, UDRIV_REGISTER_INT,
+                         TRAP_GATE, USER_DPL);
+}
+
+/** @brief Function to install a handler for udriv_deregister
+ *  syscall
+ *
+ *  @return int return value of add_idt_entry
+ */
+int install_udriv_deregister_handler() {
+	return add_idt_entry(udriv_deregister_handler, UDRIV_DEREGISTER_INT,
+                         TRAP_GATE, USER_DPL);
+}
+
+/** @brief Function to install a handler for udriv_send syscall
+ *
+ *  @return int return value of add_idt_entry
+ */
+int install_udriv_send_handler() {
+	return add_idt_entry(udriv_send_handler, UDRIV_SEND_INT,
+                         TRAP_GATE, USER_DPL);
+}
+
+/** @brief Function to install a handler for udriv_wait syscall
+ *
+ *  @return int return value of add_idt_entry
+ */
+int install_udriv_wait_handler() {
+	return add_idt_entry(udriv_wait_handler, UDRIV_WAIT_INT,
+                         TRAP_GATE, USER_DPL);
+}
+
+/** @brief Function to install a handler for udriv_inb syscall
+ *
+ *  @return int return value of add_idt_entry
+ */
+int install_udriv_inb_handler() {
+	return add_idt_entry(udriv_inb_handler, UDRIV_INB_INT,
+                         TRAP_GATE, USER_DPL);
+}
+
+/** @brief Function to install a handler for udriv_outb syscall
+ *
+ *  @return int return value of add_idt_entry
+ */
+int install_udriv_outb_handler() {
+	return add_idt_entry(udriv_outb_handler, UDRIV_OUTB_INT,
+                         TRAP_GATE, USER_DPL);
+}
+
+/** @brief Function to install a handler for udriv_mmap syscall
+ *
+ *  @return int return value of add_idt_entry
+ */
+int install_udriv_mmap_handler() {
+	return add_idt_entry(udriv_mmap_handler, UDRIV_MMAP_INT,
                          TRAP_GATE, USER_DPL);
 }

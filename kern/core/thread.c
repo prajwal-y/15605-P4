@@ -69,6 +69,8 @@ thread_struct_t *create_thread(task_struct_t *task) {
     mutex_init(&thr->deschedule_mutex);  
     cond_init(&thr->deschedule_cond_var);
 
+	init_head(&thr->udriv_list_link);
+
     thr->parent_task = task;
 	thr->k_stack_base = (uint32_t)((char *)thr->k_stack + KERNEL_STACK_SIZE);
 	thr->cur_esp = thr->k_stack_base;

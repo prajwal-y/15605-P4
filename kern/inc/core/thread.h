@@ -45,6 +45,9 @@ typedef struct thread_struct {
     list_head task_thread_link; /* Link structure for list of threads in parent */
     long wake_time;             /* Time when this thread is to be woken up */
 
+	/* List of drivers to which this thread is registered */
+	list_head udriv_list_link;	
+
     /* Mutex to protect use of the "reject" variable while descheduling */
     mutex_t deschedule_mutex;  
     /* Condition variable on which a thread waits if descheduled */ 

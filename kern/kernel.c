@@ -33,6 +33,7 @@
 #include <loader/loader.h>
 #include <core/thread.h>
 #include <core/task.h>
+#include <core/udriv.h>
 #include <exec2obj.h>
 #include <core/scheduler.h>
 #include <syscalls/syscall_handlers.h>
@@ -74,6 +75,9 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 
     /* Initialize kernel threads subsystem */
     kernel_threads_init();
+
+	/* Initialize the user driver subsystem */
+	udriv_init();	
 
     /* Load the init task into memory. This does NOT make the init task 
      * runnable. This is taken care of by the scheduler/context switcher */

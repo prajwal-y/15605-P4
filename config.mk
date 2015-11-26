@@ -143,7 +143,8 @@ KERNEL_OBJS = kernel.o loader/loader.o list/list.o drivers/console/console.o \
 			  syscalls/misc_syscalls_asm.o core/wait_vanish.o syscalls/memory_syscalls.o syscalls/memory_syscalls_asm.o \
 			  drivers/keyboard/keyboard_circular_buffer.o syscalls/system_check_syscalls.o \
 			  syscalls/system_check_syscalls_asm.o core/sleep.o	syscalls/syscall_util.o \
-			  interrupts/device_handlers.o interrupts/device_handlers_asm.o
+			  interrupts/device_handlers.o interrupts/device_handlers_asm.o \
+			  core/udriv.o syscalls/udriv_syscalls_asm.o
 
 
 ###########################################################################
