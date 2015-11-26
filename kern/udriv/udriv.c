@@ -7,7 +7,7 @@
 #include <common/malloc_wrappers.h>
 #include <vm/vm.h>
 #include <core/thread.h>
-#include <core/udriv.h>
+#include <udriv/udriv.h>
 #include <sync/mutex.h>
 #include <cr.h>
 #include <seg.h>

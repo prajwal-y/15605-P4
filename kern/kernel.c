@@ -33,7 +33,7 @@
 #include <loader/loader.h>
 #include <core/thread.h>
 #include <core/task.h>
-#include <core/udriv.h>
+#include <udriv/udriv.h>
 #include <exec2obj.h>
 #include <core/scheduler.h>
 #include <syscalls/syscall_handlers.h>
