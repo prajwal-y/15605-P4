@@ -12,12 +12,14 @@
 #include <list/list.h>
 #include <syscall.h>
 #include <udriv_registry.h>
+#include <udriv/circular_buffer.h>
 
 typedef struct udriv_struct {
-    driv_id_t id;		/* A device/software server driver ID */
-    int reg_tid;		/* Registered thread ID */
-	list_head map_link;	/* Link in the map */
-	list_head thr_link;	/* Link in the thread */
+    driv_id_t id;				/* A device/software server driver ID */
+    int reg_tid;				/* Registered thread ID */
+	list_head map_link;			/* Link in the map */
+	list_head thr_link;			/* Link in the thread */
+	message_struct_t msg_data;	/* Messages of the interrupts of the driver */
 } udriv_struct_t;
 
 void udriv_init();

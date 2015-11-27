@@ -7,6 +7,7 @@
 #include <common/malloc_wrappers.h>
 #include <vm/vm.h>
 #include <core/thread.h>
+#include <udriv/circular_buffer.h>
 #include <udriv/udriv.h>
 #include <sync/mutex.h>
 #include <cr.h>
@@ -296,7 +297,9 @@ udriv_struct_t *create_udriv(driv_id_t driver_id) {
 	kernel_assert(curr_thread != NULL);
 
     udriv->id = driver_id;
-	udriv->reg_tid = curr_thread->id;	
+	udriv->reg_tid = curr_thread->id;
+
+	init_msg_data(&udriv->msg_data);
 
     /* Add udriv to hash map */
     add_udriv_to_map(udriv);
