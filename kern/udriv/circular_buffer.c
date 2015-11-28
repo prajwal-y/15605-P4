@@ -1,6 +1,6 @@
 /** @file circular_buffer.c
  *  @brief implements a circular buffer to store
- *  interrupt messages
+ *  interrupts (and messages)
  *
  *  @author Rohit Upadhyaya (rjupadhy)
  *  @author Prajwal Yadapadithaya (pyadapad)
@@ -81,6 +81,6 @@ message_t get_nextmsg(message_struct_t *msg_data) {
 		return 0;
 	}	
     message_t msg = msg_data->buf[msg_data->start_ptr];
-    msg_data->start_ptr++;
+    msg_data->start_ptr = NEXT(msg_data->start_ptr);
     return msg;
 }

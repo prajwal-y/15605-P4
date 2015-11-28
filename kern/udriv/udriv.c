@@ -7,6 +7,7 @@
 #include <common/malloc_wrappers.h>
 #include <vm/vm.h>
 #include <core/thread.h>
+#include <core/context.h>
 #include <udriv/circular_buffer.h>
 #include <udriv/udriv.h>
 #include <sync/mutex.h>
@@ -23,6 +24,8 @@
 #include <core/scheduler.h>
 
 #define HASHMAP_SIZE PAGE_SIZE
+
+static list_head udriv_threads;
 
 static int next_unused_udriv_id;
 static mutex_t next_mutex;
@@ -43,7 +46,27 @@ static int validate_port(driv_id_t driver_id, int port);
 void udriv_init() {
     next_unused_udriv_id = UDR_MIN_ASSIGNMENT + 1;
 	mutex_init(&next_mutex);
+	init_head(&udriv_threads);
     init_udriv_map();
+}
+
+/** @brief Returns next driver thread to be run, if any
+ *
+ *  If any driver thread is waiting to run, the scheduler will
+ *  check using this function and run the driver thread first
+ *  as it has higher priority over regular user threads
+ *
+ *  @return thread_struct_t NULL if no driver thread exists
+ */
+thread_struct_t *get_udriv_thread() {
+	list_head *thr_entry = get_first(&udriv_threads);
+	if(thr_entry != NULL) {
+		thread_struct_t *thr = get_entry(thr_entry, thread_struct_t,
+											driverq_link);
+		del_entry(&thr->driverq_link);
+		return thr;
+	}
+	return NULL;
 }
 
 /** @brief Function to register the current thread to be the 
@@ -122,7 +145,40 @@ void handle_udriv_deregister(driv_id_t driver_id) {
  *  @return int 0 on success. -ve number on failure
  */
 int handle_udriv_send(void *arg_packet) {
-	return ERR_FAILURE;
+	driv_id_t driv_send = (driv_id_t)(*((int *)arg_packet));
+	message_t msg_send = *(message_t *)((int *)arg_packet + 1);
+	unsigned int msg_size = (unsigned int)(*((int *)arg_packet + 3));
+
+	if(msg_size < 0 || msg_size > sizeof(message_t)) {
+		return ERR_INVAL;
+	}	
+
+	udriv_struct_t *udriv = get_udriv_from_id(driv_send);
+	if(udriv == NULL) {
+		return ERR_INVAL;
+	}
+	
+	thread_struct_t *udriv_thread = get_thread_from_id(udriv->reg_tid);
+	if(udriv_thread == NULL) {
+		return ERR_FAILURE;
+	}
+
+	if(msg_size != 0) {
+		mutex_lock(&udriv->msg_mutex);
+		udriv->msg_size = msg_size;
+		add_message(&udriv->msg_data, msg_send);	
+		mutex_unlock(&udriv->msg_mutex);		
+	}
+
+	mutex_lock(&udriv_thread->udriv_mutex);
+	add_message(&udriv_thread->interrupts, (message_t)(int)udriv);
+
+	if(udriv_thread->status == WAITING) {
+		add_to_tail(&udriv_thread->driverq_link, &udriv_threads);
+	}
+	mutex_unlock(&udriv_thread->udriv_mutex);
+	
+	return 0;
 }
 
 /** @brief Function to collect an interrupt from a device
@@ -133,7 +189,40 @@ int handle_udriv_send(void *arg_packet) {
  *  @return int 0 on success. -ve number on failure
  */
 int handle_udriv_wait(void *arg_packet) {
-	return ERR_FAILURE;
+	driv_id_t *driver_recv = (driv_id_t *)(*((int *)arg_packet)); //TODO: validate address
+	message_t *msg_recv = (message_t *)(*((int *)arg_packet + 1)); //TODO: validate
+	unsigned int *msg_size = (unsigned int *)(*((int *)arg_packet + 2)); //TODO: validate
+	
+	thread_struct_t *curr_thread = get_curr_thread();
+
+	/* Check if thread has any registered drivers */
+	if(get_first(&curr_thread->udriv_list) == NULL) {
+		return ERR_FAILURE;
+	}
+
+	/* Check if thread has any interrupts to collect */
+	mutex_lock(&curr_thread->udriv_mutex);
+	if(!has_message(&curr_thread->interrupts)) {
+		curr_thread->status = WAITING;
+		mutex_unlock(&curr_thread->udriv_mutex);
+		context_switch();
+	}
+	mutex_unlock(&curr_thread->udriv_mutex);
+
+	udriv_struct_t *udriv = (udriv_struct_t *)
+							(int)get_nextmsg(&curr_thread->interrupts);
+	if(udriv->msg_size > 0) {
+		mutex_lock(&udriv->msg_mutex);
+		if(!has_message(&udriv->msg_data)) {
+			mutex_unlock(&udriv->msg_mutex);
+			return ERR_FAILURE;
+		}
+		*msg_recv = get_nextmsg(&udriv->msg_data);
+		*msg_size = udriv->msg_size;
+		mutex_unlock(&udriv->msg_mutex);
+	}
+	*driver_recv = udriv->id;
+	return 0;
 }
 
 /** @brief Function to read the result of calling inb()
@@ -286,7 +375,6 @@ void remove_udriv_from_map(int driver_id) {
  *  @return udriv_struct_t the newly created udriv struct. NULL on failure
  */
 udriv_struct_t *create_udriv(driv_id_t driver_id) {
-
     /* Create the udriv struct */
 	udriv_struct_t *udriv = (udriv_struct_t *)smalloc(sizeof(udriv_struct_t));
     if(udriv == NULL) {
@@ -298,14 +386,16 @@ udriv_struct_t *create_udriv(driv_id_t driver_id) {
 
     udriv->id = driver_id;
 	udriv->reg_tid = curr_thread->id;
+	udriv->msg_size = 0; //Default TODO: Can different interrupts have different sizes?
 
+	mutex_init(&udriv->msg_mutex);
 	init_msg_data(&udriv->msg_data);
 
     /* Add udriv to hash map */
     add_udriv_to_map(udriv);
 
 	/* Add to the list of drivers in the thread */
-	add_to_tail(&udriv->thr_link, &curr_thread->udriv_list_link);
+	add_to_tail(&udriv->thr_link, &curr_thread->udriv_list);
 
     return udriv;
 }

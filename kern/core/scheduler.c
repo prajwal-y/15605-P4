@@ -12,6 +12,7 @@
 #include <sync/mutex.h>
 #include <simics.h>
 #include <core/sleep.h>
+#include <udriv/udriv.h>
 #include <drivers/timer/timer.h>
 
 static thread_struct_t *curr_thread; /* The thread currently being run */
@@ -38,6 +39,13 @@ void init_scheduler() {
  *                          for the next thread
  */
 thread_struct_t *next_thread() {
+
+    /* See if any driver thread can be woken up */
+    thread_struct_t *udriv_thread = get_udriv_thread();
+    if (udriv_thread != NULL) {
+        return udriv_thread;
+    }
+
     /* See if any sleeping thread can be woken up */
     thread_struct_t *sleeping_thread = get_sleeping_thread();
     if (sleeping_thread != NULL) {

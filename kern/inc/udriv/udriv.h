@@ -11,6 +11,8 @@
 #include <stdint.h>
 #include <list/list.h>
 #include <syscall.h>
+#include <sync/mutex.h>
+#include <core/thread.h>
 #include <udriv_registry.h>
 #include <udriv/circular_buffer.h>
 
@@ -20,9 +22,13 @@ typedef struct udriv_struct {
 	list_head map_link;			/* Link in the map */
 	list_head thr_link;			/* Link in the thread */
 	message_struct_t msg_data;	/* Messages of the interrupts of the driver */
+	unsigned int msg_size;		/* Size of the messages for the driver */
+	mutex_t msg_mutex;			/* Mutex to protect accessing the message data */
 } udriv_struct_t;
 
 void udriv_init();
+
+thread_struct_t *get_udriv_thread();
 
 int handle_udriv_register(void *arg_packet);
 void handle_udriv_deregister(driv_id_t driver_id);

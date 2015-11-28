@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <list/list.h>
 #include <core/task.h>
+#include <udriv/circular_buffer.h>
 #include <syscall.h>
 #include <sync/mutex.h>
 #include <sync/cond_var.h>
@@ -22,6 +23,8 @@
 #define WAITING 2
 #define EXITED 3
 #define DESCHEDULED 4
+
+typedef message_struct_t interrupt_struct_t;
 
 /** @brief a schedulable "unit"
  *
@@ -39,6 +42,7 @@ typedef struct thread_struct {
 	int status;         	    /* Life state of the thread */
     list_head runq_link;        /* Link structure for the run queue */
     list_head sleepq_link;      /* Link structure for the sleep queue */
+	list_head driverq_link;		/* Link structure for the driver queue */
     list_head thread_map_link;  /* Link structure for the hash map */
 	list_head cond_wait_link;	/* Link structure for cond_wait */
 	list_head mutex_link;		/* Link structure for mutex */
@@ -46,7 +50,13 @@ typedef struct thread_struct {
     long wake_time;             /* Time when this thread is to be woken up */
 
 	/* List of drivers to which this thread is registered */
-	list_head udriv_list_link;	
+	list_head udriv_list;
+
+	/* Circular buffer to store interrupts */
+	interrupt_struct_t interrupts;
+
+	/* Mutex for udriv waiting threads interrupts checking */
+	mutex_t udriv_mutex;
 
     /* Mutex to protect use of the "reject" variable while descheduling */
     mutex_t deschedule_mutex;  
