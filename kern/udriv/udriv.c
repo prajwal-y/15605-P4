@@ -148,6 +148,21 @@ int handle_udriv_send(void *arg_packet) {
 	driv_id_t driv_send = (driv_id_t)(*((int *)arg_packet));
 	message_t msg_send = *(message_t *)((int *)arg_packet + 1);
 	unsigned int msg_size = (unsigned int)(*((int *)arg_packet + 3));
+	
+	return udriv_send_interrupt(driv_send, msg_send, msg_size);
+}
+
+/** @brief Function to send an interrupt to the registered
+ *  driver
+ *
+ *  @param driv_send ID of the driver to which interrupt must be sent
+ *  @param msg_send Message to be sent
+ *  @param msg_size Size of the message
+ *
+ *  @return int 0 on success. -ve number on failure
+ */
+int udriv_send_interrupt(driv_id_t driv_send, message_t msg_send, 
+							unsigned int msg_size) {
 
 	if(msg_size < 0 || msg_size > sizeof(message_t)) {
 		return ERR_INVAL;

@@ -38,4 +38,7 @@ int handle_udriv_inb(void *arg_packet);
 int handle_udriv_outb(void *arg_packet);
 int handle_udriv_mmap(void *arg_packet);
 
+int udriv_send_interrupt(driv_id_t driv_send, message_t msg_send, 
+							unsigned int msg_size);
+
 #endif  /* __UDRIV_H */
