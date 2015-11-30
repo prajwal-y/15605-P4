@@ -11,6 +11,7 @@
  */
 
 #include <asm.h>
+#include <interrupts/ns16550.h>
 #include <udriv_kern.h>
 #include <udriv_registry.h>
 #include <asm/asm.h>
@@ -30,6 +31,7 @@
 #include <syscalls/syscall_util.h>
 #include <string.h>
 
+static void init_serial_devices(int base_addr);
 static int install_device_handlers();
 
 /*All the interrupts initialization*/
@@ -164,6 +166,7 @@ int install_device_handlers() {
 				if(retval < 0) {
 					return retval;
 				}
+				init_serial_devices(COM1_IO_BASE);
 				break;
 			case UDR_DEV_COM2:
 				retval = add_idt_entry(com2_device_handler, device.idt_slot,
@@ -171,12 +174,47 @@ int install_device_handlers() {
 				if(retval < 0) {
 					return retval;
 				}
+				init_serial_devices(COM2_IO_BASE);
 				break;
 			default:
 				break;
 		}
 	}
 	return retval;
+}
+
+
+/** @brief Function to initialize the COM1 and COM2 serial devices
+ *
+ *  @param base_addr The address of the base of the serial device 
+ *
+ *  @return void
+ */
+void init_serial_devices(int base_addr) {
+	
+	/* Set DLAB to 1 to set baud rate */
+	outb(base_addr + LINE_CNTL_REG_OFFSET, LCR_DLAB);
+
+	/* Set LSB and MSB of the baud divider */
+	outb(base_addr + BAUD_DIVIDER_LSB_OFFSET, REG_BAUD_LSB);
+	outb(base_addr + BAUD_DIVIDER_MSB_OFFSET, REG_BAUD_MSB);
+
+	/* Set DLAB to 0 to enable access to data and interrupt enable 
+		registers */
+	outb(base_addr + LINE_CNTL_REG_OFFSET, 0);
+
+	/* Set the line control register to use 8N1 line configuration */
+	outb(base_addr + LINE_CNTL_REG_OFFSET, CONF_8N1);
+	
+	/* Enable interrupt delivery and set auxiliary output in modem 
+ 		control register */
+	outb(base_addr + INT_ENABLE_REG_OFFSET, IER_LOW_POWER_MODE_EN |
+											IER_SLEEP_MODE_EN | 
+											IER_MODEM_STATUS_INT_EN | 
+											IER_RECV_LINE_STAT_INT_EN |
+											IER_TX_EMPTY_INT_EN | 
+											IER_RX_FULL_INT_EN);
+
 }
 
 /** @brief this function installs a handler for divide by zero fault conditions

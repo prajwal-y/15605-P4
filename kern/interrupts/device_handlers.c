@@ -10,6 +10,7 @@
 #include <common/errors.h>
 #include <stdio.h>
 #include <string.h>
+#include <simics.h>
 
 /** @brief Handler for keyboard
  *
@@ -48,7 +49,7 @@ void console_device_handler_c() {
  *  @return void
  */
 void com1_device_handler_c() {
-	
+	lprintf("COM1 interrupt received");
 }
 
 /** @brief Handler for COM2
@@ -58,5 +59,5 @@ void com1_device_handler_c() {
  *  @return void
  */
 void com2_device_handler_c() {
-	
+	lprintf("COM2 interrupt received");
 }
