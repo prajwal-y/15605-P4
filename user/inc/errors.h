@@ -13,4 +13,6 @@
 #define ERR_BUSY -2
 #define ERR_NOMEM -3
 
+#define ERR_FAILURE -1
+
 #endif /* __THREAD_ERRORS_H */

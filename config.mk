@@ -65,7 +65,8 @@ UPDATE_METHOD = afs
 		   cho2 cho_variant swexn_basic_test swexn_cookie_monster swexn_regs \
 		   swexn_dispatch swexn_uninstall_test swexn_stands_for_swextensible \
 		   mem_permissions deschedule_hang halt_test mem_eat_test minclone_mem \
-		   register_test chow fib ack slaughter coolness mandelbrot
+		   register_test chow fib ack slaughter coolness mandelbrot \
+		   joke_server joke_client
 
 ###########################################################################
 # Test programs you have written which you wish to run
@@ -73,7 +74,7 @@ UPDATE_METHOD = afs
 # A list of the test programs you want compiled in from the user/progs
 # directory.
 #
-STUDENTTESTS =
+STUDENTTESTS = serial_server readline_server
 
 ###########################################################################
 # Data files provided by course staff to build into the RAM disk
@@ -113,7 +114,7 @@ SYSCALL_OBJS = sys_print.o set_status.o vanish.o deschedule.o sys_exec.o fork.o 
 			   remove_pages.o set_cursor_pos.o set_term_color.o sleep.o \
 			   swexn.o task_vanish.o wait.o yield.o udriv_register.o \
 			   udriv_deregister.o udriv_send.o udriv_wait.o udriv_inb.o \
-			   udriv_outb.o udriv_mmap.o
+			   udriv_outb.o udriv_mmap.o key_circular_buffer.o
 
 ###########################################################################
 # Object files for your automatic stack handling

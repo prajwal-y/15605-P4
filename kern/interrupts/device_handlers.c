@@ -7,10 +7,13 @@
  */
 
 #include <drivers/keyboard/keyboard.h>
+#include <interrupts/interrupt_handlers.h>
+#include <interrupts/ns16550.h>
 #include <common/errors.h>
 #include <stdio.h>
 #include <string.h>
 #include <simics.h>
+#include <asm.h>
 
 /** @brief Handler for keyboard
  *
@@ -38,8 +41,8 @@ void mouse_device_handler_c() {
  *
  *  @return void
  */
-void console_device_handler_c() {
-	
+void console_device_handler_c() {	
+	lprintf("Console interrupt received");
 }
 
 /** @brief Handler for COM1
@@ -50,6 +53,12 @@ void console_device_handler_c() {
  */
 void com1_device_handler_c() {
 	lprintf("COM1 interrupt received");
+	int c = inb(COM1_IO_BASE + REG_INT_ID);
+	lprintf("Line status %d", c);
+	if(c & 4) {
+		lprintf("character read is %c", inb(COM1_IO_BASE));
+	}
+	acknowledge_interrupt();
 }
 
 /** @brief Handler for COM2
@@ -60,4 +69,10 @@ void com1_device_handler_c() {
  */
 void com2_device_handler_c() {
 	lprintf("COM2 interrupt received");
+	int c = inb(COM2_IO_BASE + REG_INT_ID);
+	lprintf("Line status %d", c);
+	if(c & 4) {
+		lprintf("character read is %c", inb(COM2_IO_BASE));
+	}
+	acknowledge_interrupt();
 }

@@ -155,14 +155,14 @@ int install_device_handlers() {
 				break;
 			case UDR_CONSOLE:
 				retval = add_idt_entry(console_device_handler, device.idt_slot,
-										TRAP_GATE, KERNEL_DPL);
+										INTERRUPT_GATE, KERNEL_DPL);
 				if(retval < 0) {
 					return retval;
 				}
 				break;
 			case UDR_DEV_COM1:
 				retval = add_idt_entry(com1_device_handler, device.idt_slot,
-										TRAP_GATE, KERNEL_DPL);
+										INTERRUPT_GATE, KERNEL_DPL);
 				if(retval < 0) {
 					return retval;
 				}
@@ -170,7 +170,7 @@ int install_device_handlers() {
 				break;
 			case UDR_DEV_COM2:
 				retval = add_idt_entry(com2_device_handler, device.idt_slot,
-										TRAP_GATE, KERNEL_DPL);
+										INTERRUPT_GATE, KERNEL_DPL);
 				if(retval < 0) {
 					return retval;
 				}
@@ -191,29 +191,23 @@ int install_device_handlers() {
  *  @return void
  */
 void init_serial_devices(int base_addr) {
-	
+
 	/* Set DLAB to 1 to set baud rate */
-	outb(base_addr + LINE_CNTL_REG_OFFSET, LCR_DLAB);
+	outb(base_addr + REG_LINE_CNTL, LCR_DLAB);
 
 	/* Set LSB and MSB of the baud divider */
-	outb(base_addr + BAUD_DIVIDER_LSB_OFFSET, REG_BAUD_LSB);
-	outb(base_addr + BAUD_DIVIDER_MSB_OFFSET, REG_BAUD_MSB);
-
-	/* Set DLAB to 0 to enable access to data and interrupt enable 
-		registers */
-	outb(base_addr + LINE_CNTL_REG_OFFSET, 0);
+	outb(base_addr + REG_BAUD_LSB, 1);
+	outb(base_addr + REG_BAUD_MSB, 0);
 
 	/* Set the line control register to use 8N1 line configuration */
-	outb(base_addr + LINE_CNTL_REG_OFFSET, CONF_8N1);
+	outb(base_addr + REG_LINE_CNTL, CONF_8N1);
 	
 	/* Enable interrupt delivery and set auxiliary output in modem 
  		control register */
-	outb(base_addr + INT_ENABLE_REG_OFFSET, IER_LOW_POWER_MODE_EN |
-											IER_SLEEP_MODE_EN | 
-											IER_MODEM_STATUS_INT_EN | 
-											IER_RECV_LINE_STAT_INT_EN |
-											IER_TX_EMPTY_INT_EN | 
-											IER_RX_FULL_INT_EN);
+	outb(base_addr + REG_INT_EN, IER_TX_EMPTY_INT_EN | IER_RX_FULL_INT_EN);
+
+	/* Auxiliary output 2 to be set in the model register */
+	outb(base_addr + REG_MOD_CNTL, IER_MODEM_STATUS_INT_EN); 
 
 }
 
