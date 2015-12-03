@@ -219,8 +219,9 @@ int handle_udriv_wait(void *arg_packet) {
 	/* Check if thread has any interrupts to collect */
 	mutex_lock(&curr_thread->udriv_mutex);
 	if(!has_message(&curr_thread->interrupts)) {
-		curr_thread->status = WAITING;
 		mutex_unlock(&curr_thread->udriv_mutex);
+		disable_interrupts();
+		curr_thread->status = WAITING;
 		context_switch();
 	}
 	mutex_unlock(&curr_thread->udriv_mutex);

@@ -54,8 +54,7 @@ void add_keystroke(char c) {
  * @param buf user buffer to put the line in
  * @param len number of bytes
  *
- * @return int 0 if success and -ve integer on failure
- * TODO: Modify to return number of characters in nextline
+ * @return int number of characters in the line and -ve integer on failure
  */
 int get_nextline(char *buf, int len) {
     if (buf == NULL || len >= KEYBOARD_BUFFER_SIZE) {
@@ -70,6 +69,7 @@ int get_nextline(char *buf, int len) {
     int i;
     for (i = 0; i < len; i++) {
         if (start_ptr == newline_ptr) {
+			buf[i] = '\n';
             break;
         }
         buf[i] = key_buf[start_ptr];

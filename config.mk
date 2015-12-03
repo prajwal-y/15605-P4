@@ -66,7 +66,7 @@ UPDATE_METHOD = afs
 		   swexn_dispatch swexn_uninstall_test swexn_stands_for_swextensible \
 		   mem_permissions deschedule_hang halt_test mem_eat_test minclone_mem \
 		   register_test chow fib ack slaughter coolness mandelbrot \
-		   joke_server joke_client
+		   joke_server joke_client sleep_server sleep_client
 
 ###########################################################################
 # Test programs you have written which you wish to run

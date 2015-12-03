@@ -1,6 +1,6 @@
 /** Functions to implement the keyboard server 
  *
- * @file serial_server.c
+ * @file keyboard_server.c
  * 
  * @author Rohit Upadhyaya (rjupadhy) 
  * @author Prajwal Yadapadithaya (pyadapad)
@@ -33,15 +33,22 @@ int main(int argc, char *argv[]) {
 			lprintf("Something bad happened");
 			break;
 		}
-		lprintf("received interrupt from %d", (int)driv_recv);
-		char c = (char)msg_recv;
-		add_keystroke(c);
+		unsigned char in = (unsigned char)msg_recv;
+		kh_type key = process_scancode(in);
+		char c = ' ';
+		if ((KH_HASDATA(key) != 0) && (KH_ISMAKE(key) == 0)) {
+			c = KH_GETCHAR(key);
+			add_keystroke(c);
+		} else {
+			continue;
+		}
+		lprintf("Got character %c", c);
 		if(c == '\n') {
-			char buf[BUF_LEN + 1];
-			get_nextline(buf, BUF_LEN);
-			buf[BUF_LEN] = '\0'; //Should be null terminated
-			ipc_client_send_str(KEYBOARD_READLINE_BUF_SERVER, 
-								buf, NULL, 0);
+			lprintf("Is it coming here?");
+			char buf[BUF_LEN];
+			int num_char = get_nextline(buf, BUF_LEN);
+			ipc_client_send_msg(KEYBOARD_READLINE_BUF_SERVER, 
+									buf, num_char, NULL, 0);
 		}
     }
 	

@@ -17,6 +17,7 @@
 #include <string.h>
 #include <simics.h>
 #include <asm.h>
+#include <keyhelp.h>
 
 /** @brief Handler for keyboard
  *
@@ -25,7 +26,10 @@
  *  @return void
  */
 void keyboard_device_handler_c() {
-	enqueue_scancode(); /* Right now, it's the kernel driver */	
+	//enqueue_scancode(); /* Right now, it's the kernel driver */	
+	message_t msg = inb(KEYBOARD_PORT);
+	udriv_send_interrupt(UDR_KEYBOARD, msg, 1);
+	acknowledge_interrupt();
 }
 
 /** @brief Handler for mouse
@@ -55,12 +59,9 @@ void console_device_handler_c() {
  *  @return void
  */
 void com1_device_handler_c() {
-	lprintf("COM1 interrupt received");
 	int c = inb(COM1_IO_BASE + REG_INT_ID);
-	lprintf("Line status %d", c);
 	if(c & 4) {
 		message_t msg = inb(COM1_IO_BASE);
-		lprintf("character read is %c", (char)msg);
 		udriv_send_interrupt(UDR_DEV_COM1, msg, 1);
 	}
 	acknowledge_interrupt();
@@ -73,12 +74,9 @@ void com1_device_handler_c() {
  *  @return void
  */
 void com2_device_handler_c() {
-	lprintf("COM2 interrupt received");
 	int c = inb(COM2_IO_BASE + REG_INT_ID);
-	lprintf("Line status %d", c);
 	if(c & 4) {
 		message_t msg = inb(COM2_IO_BASE);
-		lprintf("character read is %c", (char)msg);
 		udriv_send_interrupt(UDR_DEV_COM2, msg, 1);
 	}
 	acknowledge_interrupt();

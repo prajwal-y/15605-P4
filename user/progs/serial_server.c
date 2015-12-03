@@ -63,17 +63,6 @@ int main(int argc, char *argv[]) {
 		return ERR_FAILURE;
 	}
 
-    int pid;
-    if ((pid = fork()) != 0) {
-        if (pid < 0) {
-            lprintf("serial could not be started\n");
-            return ERR_FAILURE;
-        } else {
-            lprintf("serial server started on pid %d\n", pid);
-            return 0;
-        }
-    }    
-
 	/* Register as a driver for the serial device */
 	switch(com_device_id) {
 		case 1:
@@ -100,23 +89,27 @@ int main(int argc, char *argv[]) {
 			lprintf("Something bad happened");
 			break;
 		}
-		lprintf("received interrupt from %d", (int)driv_recv);
 		char c = (char)msg_recv;
 		lprintf("Got character in serial server %d", (int)c);
-		add_keystroke(c);
+		if(c == 13) {
+			add_keystroke('\n');
+		}
+		else {
+			add_keystroke(c);
+		}
 		if(c == 13) {
 			lprintf("Is it coming here?");
-			char buf[BUF_LEN + 1];
-			get_nextline(buf, BUF_LEN);
-			buf[BUF_LEN] = '\0'; //Should be null terminated TODO. Fix this
+			char buf[BUF_LEN];
+			int num_char = get_nextline(buf, BUF_LEN);
 			switch(com_device_id) {
 				case 1:
-					ipc_client_send_str(COM1_READLINE_BUF_SERVER, 
-										buf, NULL, 0);
+					lprintf("Going to send to readline server");
+					ipc_client_send_msg(COM1_READLINE_BUF_SERVER, 
+										buf, num_char, NULL, 0);
 					break;
 				case 2:
-					ipc_client_send_str(COM2_READLINE_BUF_SERVER,
-										buf, NULL, 0);
+					ipc_client_send_msg(COM2_READLINE_BUF_SERVER,
+										buf, num_char, NULL, 0);
                     break;
 				default:
 					break;

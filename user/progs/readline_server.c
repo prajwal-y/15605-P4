@@ -27,6 +27,19 @@ int main(int argc, char *argv[]) {
     ipc_state_t* server_st;
 	ipc_state_t* buf_st;
 	if(argc == 1) {
+		/* Launch the keyboard server */
+		int server_tid = fork();
+		if(server_tid < 0) {
+			lprintf("Can't create keyboard_server");
+			return ERR_FAILURE;
+		}
+		if(!server_tid) {
+			char *args[] = {"keyboard_server", 0};
+			if(exec("keyboard_server", args) < 0) {
+				return ERR_FAILURE;
+			}
+		}
+
 	    if (ipc_server_init(&server_st, UDR_READLINE_SERVER) < 0) {
         	return ERR_FAILURE;
 	    }
@@ -64,10 +77,10 @@ int main(int argc, char *argv[]) {
 		lprintf("Got a message in readline server");
 		//Once a request comes, wait till you receive the line
 		driv_id_t device;
-		char buf[BUF_LEN+1];
+		char buf[BUF_LEN];
 		int len;
         if ((len = ipc_server_recv(buf_st, &device, &buf, 
-									BUF_LEN+1, true)) < 0) {
+									BUF_LEN, true)) < 0) {
 			lprintf("Failed in buf_st recv");
             ipc_server_cancel(buf_st);
             return ERR_FAILURE;
@@ -75,19 +88,13 @@ int main(int argc, char *argv[]) {
 
 		lprintf("Received line of length %d", len);
 
-		int i;
 		char *msg = (char *)malloc(msg_len);
 		if(msg == NULL) {
 			//TODO: What to do here?
 		}
-		for(i = 0; buf[i] != '\n' && i < msg_len; i++) {
-			msg[i] = buf[i];	
-		}
-		if(i != msg_len) {
-			msg_len = i-1;
-		}
+		memcpy(msg, buf, len);
 
 		//Now that we have the line, send that back to the client
-		ipc_server_send_msg(server_st, sender, msg, msg_len);	
+		ipc_server_send_msg(server_st, sender, msg, len);	
     }
 }

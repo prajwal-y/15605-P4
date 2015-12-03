@@ -59,7 +59,7 @@ int daemon_init() {
     // system cannot proceed without these core resources
     assert(daemon_create("readline_server", NULL, UDR_READLINE_SERVER) >= 0);
     assert(daemon_create("serial_server", "COM1", UDR_COM1_READLINE_SERVER) >= 0);
-    //assert(daemon_create("serial_server", "COM2", UDR_COM2_READLINE_SERVER) >= 0);
+    assert(daemon_create("serial_server", "COM2", UDR_COM2_READLINE_SERVER) >= 0);
 
     return 0;
 }
@@ -90,7 +90,7 @@ int main()
     }
 
     int i;
-    for (i = 0; i < 2; i++) {
+    for (i = 0; i < NSHELLS; i++) {
         if (shell_create(i) < 0) {
             panic("could not spawn initial shell");
         }
@@ -98,7 +98,7 @@ int main()
 
     while(1) {
         int exitstatus, tid = wait(&exitstatus);
-        for (i = 0; i < 2; i++) {
+        for (i = 0; i < NSHELLS; i++) {
             if (tid == shell_tids[i]) {
                 console_set_server(shell_prints[i]);
                 printf("Shell exited with status %d, starting it back up...\n", exitstatus);
