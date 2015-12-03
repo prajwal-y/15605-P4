@@ -81,7 +81,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 
     /* Load the init task into memory. This does NOT make the init task 
      * runnable. This is taken care of by the scheduler/context switcher */
-	load_init_task("init");
+	load_init_task("init_udriv");
 
     /* Load the idle task in user mode. This task ALWAYS has TID 1 */
     load_bootstrap_task("idle");

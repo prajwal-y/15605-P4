@@ -54,20 +54,26 @@ int main(int argc, char *argv[]) {
     while (true) {
         driv_id_t sender;
 		uint32_t msg_len;
+		lprintf("Going to listen in readline server");
         if (ipc_server_recv(server_st, &sender, &msg_len, BUF_LEN, true) < 0) {
 			lprintf("Failed in server_st recv");
             ipc_server_cancel(server_st);
             return ERR_FAILURE;
         }
 
+		lprintf("Got a message in readline server");
 		//Once a request comes, wait till you receive the line
 		driv_id_t device;
-		char buf[BUF_LEN + 1];
-        if (ipc_server_recv(buf_st, &device, &buf, BUF_LEN+1, true) < 0) {
+		char buf[BUF_LEN+1];
+		int len;
+        if ((len = ipc_server_recv(buf_st, &device, &buf, 
+									BUF_LEN+1, true)) < 0) {
 			lprintf("Failed in buf_st recv");
             ipc_server_cancel(buf_st);
             return ERR_FAILURE;
         }
+
+		lprintf("Received line of length %d", len);
 
 		int i;
 		char *msg = (char *)malloc(msg_len);

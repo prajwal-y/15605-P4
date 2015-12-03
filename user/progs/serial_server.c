@@ -31,6 +31,7 @@ const char *COM2 = "COM2";
 
 int com_device_id;
 
+extern void console_set_server(driv_id_t serv);
 static int launch_server(char *server_name, char *args[]);
 
 int main(int argc, char *argv[]) {
@@ -79,11 +80,13 @@ int main(int argc, char *argv[]) {
 			if(udriv_register(UDR_DEV_COM1, COM1_PORT, 1) < 0) {
 				return ERR_FAILURE;
 			}
+			console_set_server(UDR_COM1_PRINT_SERVER);
 			break;
 		case 2:
 			if(udriv_register(UDR_DEV_COM2, COM2_PORT, 1) < 0) {
 				return ERR_FAILURE;
 			}
+			console_set_server(UDR_COM2_PRINT_SERVER);
 			break;
 		default:
 			return ERR_FAILURE;
@@ -99,11 +102,13 @@ int main(int argc, char *argv[]) {
 		}
 		lprintf("received interrupt from %d", (int)driv_recv);
 		char c = (char)msg_recv;
+		lprintf("Got character in serial server %d", (int)c);
 		add_keystroke(c);
-		if(c == '\n') {
+		if(c == 13) {
+			lprintf("Is it coming here?");
 			char buf[BUF_LEN + 1];
 			get_nextline(buf, BUF_LEN);
-			buf[BUF_LEN] = '\0'; //Should be null terminated
+			buf[BUF_LEN] = '\0'; //Should be null terminated TODO. Fix this
 			switch(com_device_id) {
 				case 1:
 					ipc_client_send_str(COM1_READLINE_BUF_SERVER, 
@@ -136,6 +141,7 @@ int launch_server(char *server_name, char *args[]) {
 		return ERR_FAILURE;
 	}
 	if(!server_tid) {
+		lprintf("About to exec");
 		if(exec(server_name, args) < 0) {
 			return ERR_FAILURE;
 		}

@@ -188,8 +188,8 @@ int udriv_send_interrupt(driv_id_t driv_send, message_t msg_send,
 
 	mutex_lock(&udriv_thread->udriv_mutex);
 	add_message(&udriv_thread->interrupts, (message_t)(int)udriv);
-
 	if(udriv_thread->status == WAITING) {
+		udriv_thread->status = RUNNABLE;
 		add_to_tail(&udriv_thread->driverq_link, &udriv_threads);
 	}
 	mutex_unlock(&udriv_thread->udriv_mutex);
@@ -227,6 +227,7 @@ int handle_udriv_wait(void *arg_packet) {
 
 	udriv_struct_t *udriv = (udriv_struct_t *)
 							(int)get_nextmsg(&curr_thread->interrupts);
+	thread_assert(udriv != NULL);
 	if(udriv->msg_size > 0) {
 		mutex_lock(&udriv->msg_mutex);
 		if(!has_message(&udriv->msg_data)) {

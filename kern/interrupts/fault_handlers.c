@@ -76,8 +76,9 @@ void page_fault_handler_c() {
 		}
 	} 
     else {
+		MAGIC_BREAK;
         handle_fault(SWEXN_CAUSE_PAGEFAULT);
-    } 
+    }
 }
 
 /** @brief this function handles a debug exception

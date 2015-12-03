@@ -12,6 +12,7 @@
 #include <udriv/udriv.h>
 #include <udriv/circular_buffer.h>
 #include <stddef.h>
+#include <simics.h>
 
 #define NEXT(i) (((i) + 1) % (BUFFER_SIZE))
 #define PREV(i) (((i) == 0) ? (BUFFER_SIZE - 1) : ((i) - 1))
