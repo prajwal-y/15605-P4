@@ -6,6 +6,7 @@
  */
 
 #include <key_circular_buffer.h>
+#include <syscall.h>
 #include <asm.h>
 #include <stddef.h>
 
@@ -39,10 +40,14 @@ void add_keystroke(char c) {
 		if(end_ptr != start_ptr) {
         	end_ptr = PREV(end_ptr);
 		}
+		char buf[1] = {c};
+		print(1, buf);
         return;
     }
+	char buf[1] = {c};
+	print(1, buf);
     end_ptr = NEXT(end_ptr);
-}   
+}
 
 /** @brief get the nextline 
  *

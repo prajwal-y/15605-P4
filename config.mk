@@ -74,7 +74,7 @@ UPDATE_METHOD = afs
 # A list of the test programs you want compiled in from the user/progs
 # directory.
 #
-STUDENTTESTS = serial_server readline_server
+STUDENTTESTS = serial_server readline_server print_server keyboard_server
 
 ###########################################################################
 # Data files provided by course staff to build into the RAM disk

@@ -9,6 +9,9 @@
 #include <drivers/keyboard/keyboard.h>
 #include <interrupts/interrupt_handlers.h>
 #include <interrupts/ns16550.h>
+#include <udriv/udriv.h>
+#include <udriv_registry.h>
+#include <syscall.h>
 #include <common/errors.h>
 #include <stdio.h>
 #include <string.h>
@@ -56,7 +59,9 @@ void com1_device_handler_c() {
 	int c = inb(COM1_IO_BASE + REG_INT_ID);
 	lprintf("Line status %d", c);
 	if(c & 4) {
-		lprintf("character read is %c", inb(COM1_IO_BASE));
+		message_t msg = inb(COM1_IO_BASE);
+		lprintf("character read is %c", (char)msg);
+		udriv_send_interrupt(UDR_DEV_COM1, msg, 1);
 	}
 	acknowledge_interrupt();
 }
@@ -72,7 +77,9 @@ void com2_device_handler_c() {
 	int c = inb(COM2_IO_BASE + REG_INT_ID);
 	lprintf("Line status %d", c);
 	if(c & 4) {
-		lprintf("character read is %c", inb(COM2_IO_BASE));
+		message_t msg = inb(COM2_IO_BASE);
+		lprintf("character read is %c", (char)msg);
+		udriv_send_interrupt(UDR_DEV_COM2, msg, 1);
 	}
 	acknowledge_interrupt();
 }

@@ -1,4 +1,4 @@
-/** Functions to implement the serial server 
+/** Functions to implement the keyboard server 
  *
  * @file serial_server.c
  * 
@@ -7,37 +7,43 @@
  **/
 
 #include <stdio.h>
+#include <string.h>
+#include <key_circular_buffer.h>
 #include <stdbool.h>
 #include <syscall.h>
-#include <rand.h>
-#include <ipc_server.h>
+#include <simics.h>
+#include <ipc_client.h>
+#include <errors.h>
+#include <udriv_servers.h>
+#include <keyhelp.h>
 
 #define BUF_LEN 1024
 
-int main() {
+int main(int argc, char *argv[]) {
 
-    int pid;
-    if ((pid = fork()) != 0) {
-        if (pid < 0) {
-            lprintf("serial could not be started\n");
-            return -1;
-        } else {
-            lprintf("serial server started on pid %d\n", pid);
-            return 0;
-        }
-    }    
+	if(udriv_register(UDR_KEYBOARD, KEYBOARD_PORT, 1) < 0) {
+		return ERR_FAILURE;
+	}
 
-	
-
+	driv_id_t driv_recv;
+	message_t msg_recv;
+	unsigned int msg_size;
     while (true) {
-        // Receive a request for a joke.
-        driv_id_t sender;
-        if (ipc_server_recv(server_st, &sender, &req, sizeof(req), true) < 0) {
-            printf("could not receive request, exiting...\n");
-            ipc_server_cancel(server_st);
-            return -1;
-        }
-
-        ipc_server_send_str(server_st, sender, jokes[genrand() % NJOKES]);
+		if (udriv_wait(&driv_recv, &msg_recv, &msg_size) < 0) {
+			lprintf("Something bad happened");
+			break;
+		}
+		lprintf("received interrupt from %d", (int)driv_recv);
+		char c = (char)msg_recv;
+		add_keystroke(c);
+		if(c == '\n') {
+			char buf[BUF_LEN + 1];
+			get_nextline(buf, BUF_LEN);
+			buf[BUF_LEN] = '\0'; //Should be null terminated
+			ipc_client_send_str(KEYBOARD_READLINE_BUF_SERVER, 
+								buf, NULL, 0);
+		}
     }
+	
+	return ERR_FAILURE;
 }

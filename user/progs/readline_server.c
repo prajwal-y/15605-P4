@@ -19,14 +19,22 @@
 
 int main(int argc, char *argv[]) {
 
-	if(argc != NUM_ARGS) {
+	if(argc > NUM_ARGS) {
 		lprintf("Number of arguments to readline is incorrect");
 		return ERR_FAILURE;
 	}
 
     ipc_state_t* server_st;
 	ipc_state_t* buf_st;
-	if(strcmp(argv[1], "COM1") == 0) {
+	if(argc == 1) {
+	    if (ipc_server_init(&server_st, UDR_READLINE_SERVER) < 0) {
+        	return ERR_FAILURE;
+	    }
+    	if (ipc_server_init(&buf_st, KEYBOARD_READLINE_BUF_SERVER) < 0) {
+	        return ERR_FAILURE;
+    	}
+	}
+	else if(strcmp(argv[1], "COM1") == 0) {
     	if (ipc_server_init(&server_st, UDR_COM1_READLINE_SERVER) < 0) {
 	        return ERR_FAILURE;
     	}
@@ -39,14 +47,6 @@ int main(int argc, char *argv[]) {
 	        return ERR_FAILURE;
     	}
     	if (ipc_server_init(&buf_st, COM2_READLINE_BUF_SERVER) < 0) {
-	        return ERR_FAILURE;
-    	}
-	}
-	else if(strcmp(argv[1], "KEYBOARD") == 0) {
-	    if (ipc_server_init(&server_st, UDR_READLINE_SERVER) < 0) {
-        	return ERR_FAILURE;
-	    }
-    	if (ipc_server_init(&buf_st, KEYBOARD_READLINE_BUF_SERVER) < 0) {
 	        return ERR_FAILURE;
     	}
 	}

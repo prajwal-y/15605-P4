@@ -12,6 +12,7 @@
 #include <udriv/udriv.h>
 #include <sync/mutex.h>
 #include <cr.h>
+#include <asm.h>
 #include <seg.h>
 #include <syscall.h>
 #include <stddef.h>
@@ -248,6 +249,23 @@ int handle_udriv_wait(void *arg_packet) {
  *  @return int 0 on success. -ve number on failure
  */
 int handle_udriv_inb(void *arg_packet) {
+	unsigned int port = (unsigned int)(*((int *)arg_packet));
+	unsigned char *val = (unsigned char *)(*(int *)arg_packet + 1); //TODO: validate address
+	
+	thread_struct_t *curr_thread = get_curr_thread();
+	list_head *temp = get_first(&curr_thread->udriv_list);
+	if(temp == NULL) {
+		return ERR_FAILURE;
+	}
+	while(temp != NULL && temp != &curr_thread->udriv_list) {
+		udriv_struct_t *udriv_entry = get_entry(temp, 
+												udriv_struct_t, thr_link);
+		if(validate_port(udriv_entry->id, port) == 0) {
+			*val = inb(port);
+			return 0;
+		}
+		temp = temp->next;
+	}	
 	return ERR_FAILURE;
 }
 
@@ -259,6 +277,23 @@ int handle_udriv_inb(void *arg_packet) {
  *  @return int 0 on success. -ve number on failure
  */
 int handle_udriv_outb(void *arg_packet) {
+	unsigned int port = (unsigned int)(*((int *)arg_packet));
+	unsigned char val = *(unsigned char *)((int *)arg_packet + 1);
+
+	thread_struct_t *curr_thread = get_curr_thread();
+	list_head *temp = get_first(&curr_thread->udriv_list);
+	if(temp == NULL) {
+		return ERR_FAILURE;
+	}
+	while(temp != NULL && temp != &curr_thread->udriv_list) {
+		udriv_struct_t *udriv_entry = get_entry(temp, 
+												udriv_struct_t, thr_link);
+		if(validate_port(udriv_entry->id, port) == 0) {
+			outb(port, val);
+			return 0;
+		}
+		temp = temp->next;
+	}	
 	return ERR_FAILURE;
 }
 
