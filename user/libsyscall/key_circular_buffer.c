@@ -45,6 +45,18 @@ void add_keystroke(char c) {
     end_ptr = NEXT(end_ptr);
 }
 
+/** @brief Function to check if a key is present in the circular
+ *  buffer
+ *
+ *  @return 1 if circular buffer is not empty. 0 if empty
+ */
+int has_key() {
+	if(start_ptr == end_ptr) {
+		return 0;
+	}
+	return 1;
+}
+
 /** @brief get the nextline 
  *
  * @param buf user buffer to put the line in
