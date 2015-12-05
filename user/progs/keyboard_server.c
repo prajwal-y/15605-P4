@@ -42,6 +42,8 @@ int main(int argc, char *argv[]) {
 		} else {
 			continue;
 		}
+        char pr_buf[1] = { c };
+        print(1, pr_buf);
 		lprintf("Got character %c", c);
 		if(c == '\n') {
 			lprintf("Is it coming here?");

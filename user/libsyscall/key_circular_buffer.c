@@ -40,12 +40,8 @@ void add_keystroke(char c) {
 		if(end_ptr != start_ptr) {
         	end_ptr = PREV(end_ptr);
 		}
-		char buf[1] = {c};
-		print(1, buf);
         return;
     }
-	char buf[1] = {c};
-	print(1, buf);
     end_ptr = NEXT(end_ptr);
 }
 

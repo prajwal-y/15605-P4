@@ -40,7 +40,6 @@ void panic(const char *fmt, ...)
     // exact authorship uncertain, popularized by Heinlein
     printf("When in danger or in doubt, run in circles, scream and shout.\n");
     lprintf("When in danger or in doubt, run in circles, scream and shout.");
-	MAGIC_BREAK;
     ++side_effect;
 }
 
@@ -63,7 +62,6 @@ void kernel_panic(const char *fmt, ...)
 	va_end(vl);
 	printf("\n");
 	lprintf("KERNEL_PANIC! Going to kill kernel!: %s", fmt);
-	MAGIC_BREAK;
     halt_handler();
 }
 
@@ -86,7 +84,6 @@ void thread_panic(const char *fmt, ...)
 	va_end(vl);
 	printf("\n");
 	lprintf("THREAD_PANIC! Going to kill thread!: %s", fmt);
-	MAGIC_BREAK;
     set_status_handler_c(-2);
     do_vanish();
 }

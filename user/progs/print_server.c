@@ -75,7 +75,12 @@ void print_to_serial_device(int port, char *buf, int len) {
 		if(buf[i] == '\n') {
 			udriv_outb(port, 13);
 			udriv_outb(port, buf[i]);
-		}
+		} 
+        else if (buf[i] == '\b') {
+            udriv_outb(port, buf[i]);
+            udriv_outb(port, ' ');
+            udriv_outb(port, buf[i]);
+        }
 		else {
 			udriv_outb(port, buf[i]);
 		}

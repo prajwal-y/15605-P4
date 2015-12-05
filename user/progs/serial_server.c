@@ -22,6 +22,7 @@
 #define COM2_PORT 0x2f8
 
 #define NUM_ARGS 2
+#define CARRIAGE_RETURN 13
 
 char *print_server = "print_server";
 char *readline_server = "readline_server";
@@ -33,6 +34,7 @@ int com_device_id;
 
 extern void console_set_server(driv_id_t serv);
 static int launch_server(char *server_name, char *args[]);
+static void print_to_serial(int port, char c);
 
 int main(int argc, char *argv[]) {
 
@@ -90,20 +92,28 @@ int main(int argc, char *argv[]) {
 			break;
 		}
 		char c = (char)msg_recv;
+        char to_print;
 		lprintf("Got character in serial server %d", (int)c);
-		if(c == 13) {
+		if(c == CARRIAGE_RETURN) {
 			add_keystroke('\n');
+            to_print = '\n';
 		}
 		else {
 			add_keystroke(c);
+            to_print = c;
 		}
-		if(c == 13) {
-			lprintf("Is it coming here?");
+        switch(com_device_id) {
+            case 1: print_to_serial(COM1_PORT, to_print);
+                    break;
+            case 2: print_to_serial(COM2_PORT, to_print);
+                    break;
+            default: break;
+        }
+		if(c == CARRIAGE_RETURN) {
 			char buf[BUF_LEN];
 			int num_char = get_nextline(buf, BUF_LEN);
 			switch(com_device_id) {
 				case 1:
-					lprintf("Going to send to readline server");
 					ipc_client_send_msg(COM1_READLINE_BUF_SERVER, 
 										buf, num_char, NULL, 0);
 					break;
@@ -140,4 +150,24 @@ int launch_server(char *server_name, char *args[]) {
 		}
 	}
 	return 0;
+}
+
+/** @brief Print a character to a serial console
+ *
+ *  @param c character to be printed
+ *  @return void
+ */
+void print_to_serial(int port, char c) {
+    if(c == '\n') {
+        udriv_outb(port, 13);
+        udriv_outb(port, c);
+    } 
+    else if (c == '\b') {
+        udriv_outb(port, c);
+        udriv_outb(port, ' ');
+        udriv_outb(port, c);
+    }
+    else {
+        udriv_outb(port, c);
+    }
 }
