@@ -39,6 +39,7 @@ static udriv_struct_t *create_udriv();
 static udriv_struct_t *get_udriv_from_id(int driver_id);
 static void remove_udriv_from_map(int driver_id);
 static int validate_port(driv_id_t driver_id, int port);
+static int validate_mem_range(driv_id_t driver_id, void *base_phys, int len);
 
 /** @brief Initializes the user driver creation module
  *
@@ -347,8 +348,6 @@ int handle_udriv_mmap(void *arg_packet) {
 		temp = temp->next;
 	}	
 	return ERR_FAILURE;
-    validate_mem_range();
-
 }
 
 /* --------------- Static local functions ----------------*/
