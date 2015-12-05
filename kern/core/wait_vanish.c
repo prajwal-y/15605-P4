@@ -18,6 +18,8 @@
 #include <simics.h>
 #include <ureg.h>
 #include <syscalls/syscall_util.h>
+#include <list/list.h>
+#include <udriv/udriv.h>
 
 #define ALIVE_TASK 0
 #define DEAD_TASK 1
@@ -26,6 +28,7 @@ static void remove_thread_from_task(thread_struct_t *thr);
 static void thread_free_resources(thread_struct_t *thr);
 static void reparent_to_init(list_head *task_list, int task_type, 
                       task_struct_t *init_task);
+static void deregister_drivers(thread_struct_t *thr);
 
 /** @brief The entry point for wait system call
  *
@@ -170,6 +173,7 @@ void remove_thread_from_task(thread_struct_t *thr) {
  *  @return void
  */ 
 void thread_free_resources(thread_struct_t *thr) {
+    deregister_drivers(thr);
 	mutex_destroy(&thr->deschedule_mutex);
 	cond_destroy(&thr->deschedule_cond_var);
 	sfree(thr, sizeof(thread_struct_t));
@@ -196,4 +200,25 @@ void reparent_to_init(list_head *task_list, int task_type,
         task->parent = init_task; 
         task_node = task_node->next;
     }
+}
+
+/** @brief deregister drivers registerd by a thread
+ *
+ *  Goes through the list of drivers registered by this thread 
+ *  and deregisters them
+ *
+ *  @param thr thread_struct whose drivers have to be removed
+ *  @return void
+ */
+void deregister_drivers(thread_struct_t *thr) {
+	list_head *temp = get_first(&thr->udriv_list);
+	if(temp == NULL) {
+		return;
+	}
+	while(temp != NULL && temp != &thr->udriv_list) {
+		udriv_struct_t *udriv_entry = get_entry(temp, 
+												udriv_struct_t, thr_link);
+        handle_udriv_deregister(udriv_entry->id);
+		temp = temp->next;
+	}	
 }
