@@ -5,7 +5,6 @@
  **/
 
 #include <stdio.h>
-#include <simics.h>
 #include <string.h>
 #include <stdbool.h>
 #include <syscall.h>
@@ -16,28 +15,33 @@
 
 #define BUF_LEN 1024
 #define NUM_ARGS 2
+#define CARRIAGE_RETURN 13
 
 #define COM1_PORT 0x3f8
 #define COM2_PORT 0x2f8
+
+const char new_line = '\n';
+const char back_space = '\b';
+const char space = ' ';
+
+const char *COM1 = "COM1";
+const char *COM2 = "COM2";
 
 void print_to_serial_device(int port, char *buf, int len);
 
 int main(int argc, char *argv[]) {
 
-	lprintf("in print server");
-
 	if(argc != NUM_ARGS) {
-		lprintf("Number of arguments to print is incorrect");
 		return ERR_FAILURE;
 	}
 
     ipc_state_t* server_st;
-	if(strcmp(argv[1], "COM1") == 0) {
+	if(strcmp(argv[1], COM1) == 0) {
     	if (ipc_server_init(&server_st, UDR_COM1_PRINT_SERVER) < 0) {
 	        return ERR_FAILURE;
     	}
 	}
-	else if(strcmp(argv[1], "COM2") == 0) {
+	else if(strcmp(argv[1], COM2) == 0) {
     	if (ipc_server_init(&server_st, UDR_COM2_PRINT_SERVER) < 0) {
 	        return ERR_FAILURE;
     	}
@@ -53,9 +57,9 @@ int main(int argc, char *argv[]) {
             return ERR_FAILURE;
         }
 	
-		if(strcmp(argv[1], "COM1") == 0) {
+		if(strcmp(argv[1], COM1) == 0) {
 			print_to_serial_device(COM1_PORT, buf, len);
-		} else if(strcmp(argv[1], "COM2") == 0) {
+		} else if(strcmp(argv[1], COM2) == 0) {
 			print_to_serial_device(COM2_PORT, buf, len);
 		}
     }
@@ -72,13 +76,13 @@ int main(int argc, char *argv[]) {
 void print_to_serial_device(int port, char *buf, int len) {
 	int i = 0;
 	while(buf[i] != '\0' && i < len) {
-		if(buf[i] == '\n') {
-			udriv_outb(port, 13);
+		if(buf[i] == new_line) {
+			udriv_outb(port, CARRIAGE_RETURN);
 			udriv_outb(port, buf[i]);
 		} 
-        else if (buf[i] == '\b') {
+        else if (buf[i] == back_space) {
             udriv_outb(port, buf[i]);
-            udriv_outb(port, ' ');
+            udriv_outb(port, space);
             udriv_outb(port, buf[i]);
         }
 		else {

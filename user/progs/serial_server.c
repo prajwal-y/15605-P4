@@ -11,7 +11,6 @@
 #include <key_circular_buffer.h>
 #include <stdbool.h>
 #include <syscall.h>
-#include <simics.h>
 #include <ipc_client.h>
 #include <errors.h>
 #include <udriv_servers.h>
@@ -30,6 +29,10 @@ char *readline_server = "readline_server";
 const char *COM1 = "COM1";
 const char *COM2 = "COM2";
 
+const char new_line = '\n';
+const char back_space = '\b';
+const char space = ' ';
+
 int com_device_id;
 
 extern void console_set_server(driv_id_t serv);
@@ -39,11 +42,9 @@ static void print_to_serial(int port, char c);
 int main(int argc, char *argv[]) {
 
 	if(argc != NUM_ARGS) {
-		lprintf("Number of arguments incorrect");
 		return ERR_FAILURE;
 	}
 	if(strcmp(argv[1], COM1) != 0 && strcmp(argv[1], COM2) != 0) {
-		lprintf("Invalid argument %s", argv[1]);
 		return ERR_FAILURE;
 	}
 	if(strcmp(argv[1], COM1) == 0) {
@@ -52,8 +53,6 @@ int main(int argc, char *argv[]) {
 	else if(strcmp(argv[1], COM2) == 0) {
 		com_device_id = 2;
 	}
-
-	lprintf("Trying to initialize serial server for %s", argv[1]);
 
 	/* Initialize the readline and print servers for the serial device */
 	char *readline_args[] = {readline_server, argv[1], 0};
@@ -88,17 +87,18 @@ int main(int argc, char *argv[]) {
 	unsigned int msg_size;
     while (true) {
 		if (udriv_wait(&driv_recv, &msg_recv, &msg_size) < 0) {
-			lprintf("Something bad happened");
 			break;
 		}
 		char c = (char)msg_recv;
         char to_print;
-		lprintf("Got character in serial server %d", (int)c);
 		if(c == CARRIAGE_RETURN) {
-			add_keystroke('\n');
-            to_print = '\n';
+			add_keystroke(new_line);
+            to_print = new_line;
 		}
 		else {
+			if(c == back_space && !has_key()) {
+				continue;
+			}
 			add_keystroke(c);
             to_print = c;
 		}
@@ -140,11 +140,9 @@ int main(int argc, char *argv[]) {
 int launch_server(char *server_name, char *args[]) {
 	int server_tid = fork();
 	if(server_tid < 0) {
-		lprintf("Can't create %s", server_name);
 		return ERR_FAILURE;
 	}
 	if(!server_tid) {
-		lprintf("About to exec");
 		if(exec(server_name, args) < 0) {
 			return ERR_FAILURE;
 		}
@@ -158,13 +156,13 @@ int launch_server(char *server_name, char *args[]) {
  *  @return void
  */
 void print_to_serial(int port, char c) {
-    if(c == '\n') {
-        udriv_outb(port, 13);
+    if(c == new_line) {
+        udriv_outb(port, CARRIAGE_RETURN);
         udriv_outb(port, c);
     } 
-    else if (c == '\b') {
+    else if (c == back_space) {
         udriv_outb(port, c);
-        udriv_outb(port, ' ');
+        udriv_outb(port, space);
         udriv_outb(port, c);
     }
     else {

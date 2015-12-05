@@ -14,6 +14,8 @@
 
 void add_keystroke(char c);
 
+int has_key();
+
 int get_nextline(char *buf, int len);
 
 int get_nextchar();

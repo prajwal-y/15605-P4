@@ -11,13 +11,16 @@
 #include <key_circular_buffer.h>
 #include <stdbool.h>
 #include <syscall.h>
-#include <simics.h>
 #include <ipc_client.h>
 #include <errors.h>
 #include <udriv_servers.h>
 #include <keyhelp.h>
 
 #define BUF_LEN 1024
+
+const char back_space = '\b';
+const char new_line = '\n';
+const char space = ' ';
 
 int main(int argc, char *argv[]) {
 
@@ -30,23 +33,23 @@ int main(int argc, char *argv[]) {
 	unsigned int msg_size;
     while (true) {
 		if (udriv_wait(&driv_recv, &msg_recv, &msg_size) < 0) {
-			lprintf("Something bad happened");
 			break;
 		}
 		unsigned char in = (unsigned char)msg_recv;
 		kh_type key = process_scancode(in);
-		char c = ' ';
+		char c = space;
 		if ((KH_HASDATA(key) != 0) && (KH_ISMAKE(key) == 0)) {
 			c = KH_GETCHAR(key);
+			if(c == back_space && !has_key()) {
+				continue;
+			}
 			add_keystroke(c);
 		} else {
 			continue;
 		}
         char pr_buf[1] = { c };
         print(1, pr_buf);
-		lprintf("Got character %c", c);
-		if(c == '\n') {
-			lprintf("Is it coming here?");
+		if(c == new_line) {
 			char buf[BUF_LEN];
 			int num_char = get_nextline(buf, BUF_LEN);
 			ipc_client_send_msg(KEYBOARD_READLINE_BUF_SERVER, 
