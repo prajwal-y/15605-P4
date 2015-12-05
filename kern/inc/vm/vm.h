@@ -83,4 +83,6 @@ int is_memory_writable(void *ptr, int bytes);
 
 int is_memory_writable(void *ptr, int bytes);
 
+int map_phys_to_virt(void *base_phys, void *base_virt, int len);
+
 #endif /* __VM_H */

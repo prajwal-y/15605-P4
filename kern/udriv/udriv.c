@@ -303,12 +303,52 @@ int handle_udriv_outb(void *arg_packet) {
  *  a specified virtual address for purposes of performing
  *  memory mapped I/O.
  *
+ *  The function succeeds only if the thread has registered for a driver
+ *  for which the base_phys and length arguments form a prt of its mem
+ *  mapped I/O range.
+ *
  *  @param arg_packet Argument from the system call
  *
  *  @return int 0 on success. -ve number on failure
  */
 int handle_udriv_mmap(void *arg_packet) {
+	void *base_phys = (void *)(*((int *)arg_packet));
+	void *base_virt = (void *)((int *)arg_packet + 1);
+	int len = (int)((int *)arg_packet + 2);
+
+    if (len <= 0 || (len % PAGE_SIZE) != 0 || ((int)base_phys % PAGE_SIZE) != 0
+        || ((int)base_virt % PAGE_SIZE) != 0) {
+        return ERR_INVAL;
+    }
+    /* Check if the virtual address is not currently mapped to some part 
+     * of the process's address space */
+    if (is_memory_range_mapped(base_virt, len) != MEMORY_REGION_UNMAPPED) {
+        return ERR_INVAL;
+    }
+    /* Check if physical memory range is allowed for memory mapped I/O */
+	thread_struct_t *curr_thread = get_curr_thread();
+	list_head *temp = get_first(&curr_thread->udriv_list);
+	if(temp == NULL) {
+		return ERR_FAILURE;
+	}
+	while(temp != NULL && temp != &curr_thread->udriv_list) {
+		udriv_struct_t *udriv_entry = get_entry(temp, 
+												udriv_struct_t, thr_link);
+		if(validate_mem_range(udriv_entry->id,base_phys, len) == 0) {
+			/* Both the physical memory range and the virtual memory range 
+             * are mapped, go for mapping the physical pages to virtual 
+             * addresses */
+            int retval;
+            if ((retval = map_phys_to_virt(base_phys, base_virt, len)) < 0) {
+                return retval;
+            }
+			return 0;
+		}
+		temp = temp->next;
+	}	
 	return ERR_FAILURE;
+    validate_mem_range();
+
 }
 
 /* --------------- Static local functions ----------------*/
@@ -334,6 +374,35 @@ int validate_port(driv_id_t driver_id, int port) {
 				}
 			}
 			if(j == device.port_regions_cnt) {
+				return ERR_INVAL;
+			}
+		}
+	}
+	return 0;
+}
+
+/** @brief Function to validate a memory range for a given driver ID.
+ *
+ *  @param driv_id_t Driver for which the memory range must be validated
+ *  @param base_phys base address of the memory range
+ *  @param len length of memory range
+ *
+ *  @return 0 if port is valid. -ve number if invalid
+ */
+int validate_mem_range(driv_id_t driver_id, void *base_phys, int len) {
+	int i;
+	for(i = 0; i < device_table_entries; i++) {
+		dev_spec_t device = device_table[i];
+		if(driver_id == device.id) {
+			int j;
+			for(j = 0; j < device.mem_regions_cnt; j++) {
+				if((unsigned int)base_phys >= device.mem_regions[j].base &&
+					((unsigned int)base_phys <= device.mem_regions[j].base + 
+							 device.mem_regions[j].len)) {
+					break;
+				}
+			}
+			if(j == device.mem_regions_cnt) {
 				return ERR_INVAL;
 			}
 		}
