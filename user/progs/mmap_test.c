@@ -10,6 +10,7 @@
 #include <errors.h>
 #include <syscall.h>
 #include <simics.h>
+#include <udriv_registry.h>
 
 #define VIDEO_MEM_ADDR 0xb8000
 #define VIDEO_MEM_LEN 0x1000

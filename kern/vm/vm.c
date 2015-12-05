@@ -246,6 +246,10 @@ void free_page_table(int *pt) {
 			continue;
 		}
 		void *frame_addr = (void *)GET_ADDR_FROM_ENTRY(pt[i]);
+        /* If the frame belongs to kernel space (maybe through udriv_mmap) dont free */
+        if ((unsigned int)frame_addr < USER_MEM_START) {
+            continue;
+        }
 		lock_frame(frame_addr);
 		frame_ref_count[FRAME_INDEX(frame_addr)]--;
 		kernel_assert(frame_ref_count[FRAME_INDEX(frame_addr)] >= 0);

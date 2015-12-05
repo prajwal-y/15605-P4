@@ -314,8 +314,8 @@ int handle_udriv_outb(void *arg_packet) {
  */
 int handle_udriv_mmap(void *arg_packet) {
 	void *base_phys = (void *)(*((int *)arg_packet));
-	void *base_virt = (void *)((int *)arg_packet + 1);
-	int len = (int)((int *)arg_packet + 2);
+	void *base_virt = (void *)*((int *)arg_packet + 1);
+	int len = (int)*((int *)arg_packet + 2);
 
     if (len <= 0 || (len % PAGE_SIZE) != 0 || ((int)base_phys % PAGE_SIZE) != 0
         || ((int)base_virt % PAGE_SIZE) != 0) {
@@ -363,6 +363,9 @@ int validate_port(driv_id_t driver_id, int port) {
 	int i;
 	for(i = 0; i < device_table_entries; i++) {
 		dev_spec_t device = device_table[i];
+        if (device.port_regions_cnt == 0) {
+            continue;
+        }
 		if(driver_id == device.id) {
 			int j;
 			for(j = 0; j < device.port_regions_cnt; j++) {
