@@ -381,6 +381,8 @@ int handle_udriv_mmap(void *arg_packet) {
  */
 int validate_port(driv_id_t driver_id, int port) {
 	int i;
+
+	/* Check in the known devices */
 	for(i = 0; i < device_table_entries; i++) {
 		dev_spec_t device = device_table[i];
         if (device.port_regions_cnt == 0) {
@@ -392,15 +394,30 @@ int validate_port(driv_id_t driver_id, int port) {
 				if(port >= device.port_regions[j].base &&
 					(port <= device.port_regions[j].base + 
 							 device.port_regions[j].len)) {
-					break;
+					return 0;
 				}
-			}
-			if(j == device.port_regions_cnt) {
-				return ERR_INVAL;
 			}
 		}
 	}
-	return 0;
+
+	/* Check in the well known servers */
+	for(i = 0; i < server_table_entries; i++) {
+		dev_spec_t server = server_table[i];
+        if (server.port_regions_cnt == 0) {
+            continue;
+        }
+		if(driver_id == server.id) {
+			int j;
+			for(j = 0; j < server.port_regions_cnt; j++) {
+				if(port >= server.port_regions[j].base &&
+					(port <= server.port_regions[j].base + 
+							 server.port_regions[j].len)) {
+					return 0;
+				}
+			}
+		}
+	}
+	return ERR_FAILURE;
 }
 
 /** @brief Function to validate a memory range for a given driver ID.
@@ -413,6 +430,7 @@ int validate_port(driv_id_t driver_id, int port) {
  */
 int validate_mem_range(driv_id_t driver_id, void *base_phys, int len) {
 	int i;
+	/* Check in the known devices */
 	for(i = 0; i < device_table_entries; i++) {
 		dev_spec_t device = device_table[i];
 		if(driver_id == device.id) {
@@ -421,15 +439,27 @@ int validate_mem_range(driv_id_t driver_id, void *base_phys, int len) {
 				if((unsigned int)base_phys >= device.mem_regions[j].base &&
 					((unsigned int)base_phys <= device.mem_regions[j].base + 
 							 device.mem_regions[j].len)) {
-					break;
+					return 0;
 				}
-			}
-			if(j == device.mem_regions_cnt) {
-				return ERR_INVAL;
 			}
 		}
 	}
-	return 0;
+
+	/* Check in the well known servers */
+	for(i = 0; i < server_table_entries; i++) {
+		dev_spec_t server = server_table[i];
+		if(driver_id == server.id) {
+			int j;
+			for(j = 0; j < server.mem_regions_cnt; j++) {
+				if((unsigned int)base_phys >= server.mem_regions[j].base &&
+					((unsigned int)base_phys <= server.mem_regions[j].base + 
+							 					server.mem_regions[j].len)) {
+					return 0;
+				}
+			}
+		}
+	}
+	return ERR_FAILURE;
 }
 
 /** @brief Initialize the buckets of the hash map

@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <list/list.h>
 #include <syscall.h>
+#include <udriv_kern.h>
 #include <sync/mutex.h>
 #include <core/thread.h>
 #include <udriv_registry.h>
@@ -25,6 +26,10 @@ typedef struct udriv_struct {
 	unsigned int msg_size;		/* Size of the messages for the driver */
 	mutex_t msg_mutex;			/* Mutex to protect accessing the message data */
 } udriv_struct_t;
+
+/* Server table which stores well known servers for I/O permissions */
+extern const dev_spec_t server_table[];
+extern const int server_table_entries;
 
 void udriv_init();
 

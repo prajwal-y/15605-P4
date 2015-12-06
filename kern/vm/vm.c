@@ -44,7 +44,8 @@ static int map_data_segment(simple_elf_t *se_hdr, void *pd_addr);
 static int map_rodata_segment(simple_elf_t *se_hdr, void *pd_addr);
 static int map_bss_segment(simple_elf_t *se_hdr, void *pd_addr);
 static int map_stack_segment(void *pd_addr);
-static int map_segment(void *start_addr, unsigned int length, int *pd_addr, int flags);
+static int map_segment(void *start_addr, unsigned int length, 
+						int *pd_addr, int flags);
 static void *direct_map[USER_MEM_START / (PAGE_SIZE * NUM_PAGE_TABLE_ENTRIES)];
 
 static void *create_page_table();
