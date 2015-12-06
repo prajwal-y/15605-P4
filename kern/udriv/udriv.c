@@ -23,6 +23,7 @@
 #include <common/assert.h>
 #include <common/errors.h>
 #include <core/scheduler.h>
+#include <syscalls/syscall_util.h>
 
 #define HASHMAP_SIZE PAGE_SIZE
 
@@ -206,9 +207,24 @@ int udriv_send_interrupt(driv_id_t driv_send, message_t msg_send,
  *  @return int 0 on success. -ve number on failure
  */
 int handle_udriv_wait(void *arg_packet) {
-	driv_id_t *driver_recv = (driv_id_t *)(*((int *)arg_packet)); //TODO: validate address
-	message_t *msg_recv = (message_t *)(*((int *)arg_packet + 1)); //TODO: validate
-	unsigned int *msg_size = (unsigned int *)(*((int *)arg_packet + 2)); //TODO: validate
+	driv_id_t *driver_recv = (driv_id_t *)(*((int *)arg_packet));
+    if (driver_recv != NULL
+        && (is_pointer_valid(driver_recv, sizeof(driv_id_t)) < 0
+        || is_memory_writable(driver_recv, sizeof(driv_id_t)) < 0)) {
+        return ERR_INVAL;
+    }
+	message_t *msg_recv = (message_t *)(*((int *)arg_packet + 1));
+    if (msg_recv != NULL 
+        && (is_pointer_valid(msg_recv, sizeof(message_t)) < 0
+        || is_memory_writable(msg_recv, sizeof(message_t)) < 0)) {
+        return ERR_INVAL;
+    }
+	unsigned int *msg_size = (unsigned int *)(*((int *)arg_packet + 2));
+    if (msg_size != NULL 
+        && (is_pointer_valid(msg_size, sizeof(unsigned int)) < 0
+        || is_memory_writable(msg_size, sizeof(unsigned int)) < 0)) {
+        return ERR_INVAL;
+    }
 	
 	thread_struct_t *curr_thread = get_curr_thread();
 
@@ -253,7 +269,11 @@ int handle_udriv_wait(void *arg_packet) {
  */
 int handle_udriv_inb(void *arg_packet) {
 	unsigned int port = (unsigned int)(*((int *)arg_packet));
-	unsigned char *val = (unsigned char *)(*(int *)arg_packet + 1); //TODO: validate address
+	unsigned char *val = (unsigned char *)(*(int *)arg_packet + 1);
+    if (val != NULL && (is_pointer_valid(val, 1) < 0
+        || is_memory_writable(val, 1) < 0)) {
+        return ERR_INVAL;
+    }
 	
 	thread_struct_t *curr_thread = get_curr_thread();
 	list_head *temp = get_first(&curr_thread->udriv_list);
@@ -509,7 +529,7 @@ udriv_struct_t *create_udriv(driv_id_t driver_id) {
 
     udriv->id = driver_id;
 	udriv->reg_tid = curr_thread->id;
-	udriv->msg_size = 0; //Default TODO: Can different interrupts have different sizes?
+	udriv->msg_size = 0;
 
 	mutex_init(&udriv->msg_mutex);
 	init_msg_data(&udriv->msg_data);

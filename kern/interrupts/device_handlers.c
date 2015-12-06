@@ -19,6 +19,8 @@
 #include <asm.h>
 #include <keyhelp.h>
 
+#define DEV_RCV_INT 4
+
 /** @brief Handler for keyboard
  *
  *  This function is the handler for keyboard interrupts.
@@ -26,7 +28,6 @@
  *  @return void
  */
 void keyboard_device_handler_c() {
-	//enqueue_scancode(); /* Right now, it's the kernel driver */	
 	message_t msg = inb(KEYBOARD_PORT);
 	udriv_send_interrupt(UDR_KEYBOARD, msg, 1);
 	acknowledge_interrupt();
@@ -34,22 +35,22 @@ void keyboard_device_handler_c() {
 
 /** @brief Handler for mouse
  *
- *  This function is the handler for keyboard interrupts.
+ *  This function is the handler for mouse interrupts.
  *
  *  @return void
  */
 void mouse_device_handler_c() {
-	
+    //not implemented
 }
 
-/** @brief Handler for console
+/** @brief Handler for console device
  *
- *  This function is the handler for keyboard interrupts.
+ *  This function is the handler for console interrupts.
  *
  *  @return void
  */
-void console_device_handler_c() {	
-	lprintf("Console interrupt received");
+void console_device_handler_c() {
+    //not implemented
 }
 
 /** @brief Handler for COM1
@@ -60,7 +61,7 @@ void console_device_handler_c() {
  */
 void com1_device_handler_c() {
 	int c = inb(COM1_IO_BASE + REG_INT_ID);
-	if(c & 4) {
+	if(c & DEV_RCV_INT) {
 		message_t msg = inb(COM1_IO_BASE);
 		udriv_send_interrupt(UDR_DEV_COM1, msg, 1);
 	}
@@ -75,7 +76,7 @@ void com1_device_handler_c() {
  */
 void com2_device_handler_c() {
 	int c = inb(COM2_IO_BASE + REG_INT_ID);
-	if(c & 4) {
+	if(c & DEV_RCV_INT) {
 		message_t msg = inb(COM2_IO_BASE);
 		udriv_send_interrupt(UDR_DEV_COM2, msg, 1);
 	}

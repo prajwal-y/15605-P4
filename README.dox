@@ -5,6 +5,96 @@
 @author Prajwal Yadapadithaya (pyadapad)
 @author Rohit Upadhyaya (rjupadhy)
 
-Please make sure your README.dox documents your P4, not your P3!
+Drivers in user space
+----------------------
+
+This project extends the PEBBLES kernel to support drivers in userspace.
+The deliverables include implementation of various system calls to support
+registering for devices, receiving and processing interrupts from these
+devices. This README describes the design decisions taken in the implementation
+of the kernel syscall interface and the corresponding user drivers written for
+the keyboard and serial devices. We have also moved the readline and print 
+implementations to userspace.
+
+Kernel implementation
+----------------------
+Files changed/added:
+kern/udriv/udriv.c
+kern/udriv/circular_buffer.c
+kern/interrupts/interrupt_handlers.c
+kern/interrupts/device_handlers.c
+kern/core/wait_vanish.c
+kern/inc/udriv/udriv.h
+kern/inc/udriv/circular_buffer.h
+
+The syscall interface supports all the udriv system calls (including 
+udriv_mmap) mentioned in the writeup. Various design decisions taken in each
+syscall are described after describing the key data structures used in the 
+syscall interface.
+
+The main data structures used are circular buffers and a map. The circular
+buffer is used in 2 places. A circular buffer is created for each driver that
+is registered and is used to store messages received for that particular driver.
+The circular buffer implementation is also reused to store interrupts received 
+for a thread if that thread is registered for any driver. All interrupts from 
+all drivers that the thread has registered for is stored in chronological order
+in this circular buffer. The circular buffer implementation is present in 
+kern/udriv/circular_buffer.c
+The map implementation is similar to the implementation used in the PEBBLES 
+kernel for quick access to thread structs. Here the map is used to have
+constant time access to driver structs given a driver ID.
+The interrupt/device handlers for all the devices mentioned in the device table 
+are present in kern/interrupts/device_handlers.c. The configuration of the 
+serial devices is present in interrupts/interrupt_handlers.c
+
+The udriv implementation is present in kern/udriv/udriv.c
+All the udriv system calls manipulate these data structures to accomplish the
+functionality. The vanish implementation deregisters all registered drivers 
+before freeing the thread resources. When a thread calls udriv_wait and cannot 
+be serviced immediately it is descheduled and when an interrupt is received for
+that particular driver udriv_send will add the registered thread to a special
+driver queue which the scheduler checks for before checking the other runqueues.
+
+User implementation
+-------------------
+Files changed/added:
+user/progs/serial_server.c
+user/progs/readline_server.c
+user/progs/print_server.c
+user/progs/keyboard_server.c
+user/libsyscall/key_circular_buffer.c
+user/inc/key_circular_buffer.h
+user/progs/mmap_test.c
+
+Serial server: This server registers as a server to handle serial device
+interrupt for both the COM1 and COM2 devices. This server uses the
+key_circular_buffer to store characters received from the serial device.
+When we get a CR from the serial device, this indicates that a newline is 
+present and it sends a message to the readline server using the IPC library
+indicating availability of a new line and includes the new line in the message.
+The serial server launches the readline and print servers for the serial device
+it is responsible for.
+
+Readline server: This server waits for requests from the readline client 
+(libipcgoo/readline.c) and whenever it receives a request it waits for a 
+line from the keyboard or serial server. The readline
+server is launched with parameters indicating which device the readline server
+will get key presses from. If no parameter is passed the readline server 
+launches the keyboard server (for listening to key presses from the main 
+keyboard). When the line is received from the keyboard/serial server the line
+is sent back to the client using IPC. 
+
+Print server: This server listens for print commands for the serial device.
+On receiving a print request it uses the udriv_outb system call to print to the
+serial device.
+
+Keyboard server: This server listens for interrupts from the keyboard and 
+performs the same functionality as the serial server when a newline is 
+received.
+
+We have a circular buffer implementation in key_circular_buffer.c that is used 
+to store characters from the keyboard/serial device.
+
+A simple test for udriv_mmap syscall is present in user/progs/mmap_test.c.
 
 */
