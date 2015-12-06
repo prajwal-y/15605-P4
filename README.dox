@@ -21,6 +21,7 @@ Kernel implementation
 Files changed/added:
 kern/udriv/udriv.c
 kern/udriv/circular_buffer.c
+kern/udriv/udriv_server_table.c
 kern/interrupts/interrupt_handlers.c
 kern/interrupts/device_handlers.c
 kern/core/wait_vanish.c
@@ -54,6 +55,10 @@ before freeing the thread resources. When a thread calls udriv_wait and cannot
 be serviced immediately it is descheduled and when an interrupt is received for
 that particular driver udriv_send will add the registered thread to a special
 driver queue which the scheduler checks for before checking the other runqueues.
+
+We also store the I/O permissions for well known user servers in 
+udriv_server_table.c. Permissions are checked in this file and in the device
+tables when a thread tries to access an I/O port.
 
 User implementation
 -------------------
