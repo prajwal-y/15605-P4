@@ -332,6 +332,43 @@ void increment_ref_count(int *pt) {
 	}
 }
 
+/** @brief Map physical frames to virtual addresses
+ *
+ *  @param base_phys the bases of the physical address to be mapped
+ *  @param base_virt the base of the virtual address where the physical
+ *                    address will be mapped
+ *  @param len the number of bytes that are to be mapped
+ */
+int map_phys_to_virt(void *base_phys, void *base_virt, int len) {
+    void *end_addr = (char *)base_virt + len;
+    int *pd_addr = (int *)get_cr3();
+    int *pt_addr;
+    int pd_index, pt_index;
+    int flags = PAGE_ENTRY_PRESENT | READ_WRITE_ENABLE | USER_MODE;
+
+    while (base_virt <= end_addr) {
+        pd_index = GET_PD_INDEX(base_virt);
+        pt_index = GET_PT_INDEX(base_virt);
+        if (pd_addr[pd_index] == PAGE_DIR_ENTRY_DEFAULT) { /* Page directory entry absent */
+            void *new_pt = create_page_table();
+            if (new_pt != NULL) {
+                pd_addr[pd_index] = (unsigned int)new_pt | USER_PD_ENTRY_FLAGS;
+            }
+            else {
+                return ERR_NOMEM;
+            }
+        }
+        pt_addr = (int *)GET_ADDR_FROM_ENTRY(pd_addr[pd_index]);
+        if (pt_addr[pt_index] == PAGE_TABLE_ENTRY_DEFAULT) { /* Page table entry absent */
+                pt_addr[pt_index] = (unsigned int)base_phys | flags;
+        }
+        base_virt = (char *)base_virt + PAGE_SIZE;
+        base_phys = (char *)base_phys + PAGE_SIZE;
+    }
+
+    return 0;
+}
+
 /*********************COPY-ON-WRITE FUNCTIONS***************************/
 
 /** @brief Function to make the pages for a task copy-on-write
@@ -393,43 +430,6 @@ int is_addr_cow(void *addr) {
 		return 1;
 	}
 	return 0;
-}
-
-/** @brief Map physical frames to virtual addresses
- *
- *  @param base_phys the bases of the physical address to be mapped
- *  @param base_virt the base of the virtual address where the physical
- *                    address will be mapped
- *  @param len the number of bytes that are to be mapped
- */
-int map_phys_to_virt(void *base_phys, void *base_virt, int len) {
-    void *end_addr = (char *)base_virt + len;
-    int *pd_addr = (int *)get_cr3();
-    int *pt_addr;
-    int pd_index, pt_index;
-    int flags = PAGE_ENTRY_PRESENT | READ_WRITE_ENABLE | USER_MODE;
-
-    while (base_virt <= end_addr) {
-        pd_index = GET_PD_INDEX(base_virt);
-        pt_index = GET_PT_INDEX(base_virt);
-        if (pd_addr[pd_index] == PAGE_DIR_ENTRY_DEFAULT) { /* Page directory entry absent */
-            void *new_pt = create_page_table();
-            if (new_pt != NULL) {
-                pd_addr[pd_index] = (unsigned int)new_pt | USER_PD_ENTRY_FLAGS;
-            }
-            else {
-                return ERR_NOMEM;
-            }
-        }
-        pt_addr = (int *)GET_ADDR_FROM_ENTRY(pd_addr[pd_index]);
-        if (pt_addr[pt_index] == PAGE_TABLE_ENTRY_DEFAULT) { /* Page table entry absent */
-                pt_addr[pt_index] = (unsigned int)base_phys | flags;
-        }
-        base_virt = (char *)base_virt + PAGE_SIZE;
-        base_phys = (char *)base_phys + PAGE_SIZE;
-    }
-
-    return 0;
 }
 
 /** @brief Function to handle COW

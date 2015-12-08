@@ -25,6 +25,8 @@ typedef struct udriv_struct {
 	message_struct_t msg_data;	/* Messages of the interrupts of the driver */
 	unsigned int msg_size;		/* Size of the messages for the driver */
 	mutex_t msg_mutex;			/* Mutex to protect accessing the message data */
+    unsigned int in_bytes;      /* Number of bytes to be read from in_port */
+    unsigned int in_port;       /* Port to be read from */
 } udriv_struct_t;
 
 /* Server table which stores well known servers for I/O permissions */
@@ -45,5 +47,6 @@ int handle_udriv_mmap(void *arg_packet);
 
 int udriv_send_interrupt(driv_id_t driv_send, message_t msg_send, 
 							unsigned int msg_size);
+udriv_struct_t *get_udriv_from_id(int driver_id);
 
 #endif  /* __UDRIV_H */
