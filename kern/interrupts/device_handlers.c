@@ -61,9 +61,17 @@ void console_device_handler_c() {
  */
 void com1_device_handler_c() {
 	int c = inb(COM1_IO_BASE + REG_INT_ID);
+    udriv_struct_t *driv = get_udriv_from_id(UDR_DEV_COM1);
 	if(c & DEV_RCV_INT) {
-		message_t msg = inb(COM1_IO_BASE);
-		udriv_send_interrupt(UDR_DEV_COM1, msg, 1);
+        if (driv != NULL) {
+            if (driv->in_bytes == 1) {
+		        message_t msg = inb(COM1_IO_BASE);
+		        udriv_send_interrupt(UDR_DEV_COM1, msg, 1);
+            }
+            else {
+		        udriv_send_interrupt(UDR_DEV_COM1, (message_t)0, 0);
+            }
+        }
 	}
 	acknowledge_interrupt();
 }
@@ -76,9 +84,17 @@ void com1_device_handler_c() {
  */
 void com2_device_handler_c() {
 	int c = inb(COM2_IO_BASE + REG_INT_ID);
+    udriv_struct_t *driv = get_udriv_from_id(UDR_DEV_COM2);
 	if(c & DEV_RCV_INT) {
-		message_t msg = inb(COM2_IO_BASE);
-		udriv_send_interrupt(UDR_DEV_COM2, msg, 1);
+        if (driv != NULL) {
+            if (driv->in_bytes == 1) {
+		        message_t msg = inb(COM2_IO_BASE);
+		        udriv_send_interrupt(UDR_DEV_COM2, msg, 1);
+            }
+            else {
+		        udriv_send_interrupt(UDR_DEV_COM2, (message_t)0, 0);
+            }
+        }
 	}
 	acknowledge_interrupt();
 }

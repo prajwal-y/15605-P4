@@ -37,7 +37,6 @@ static list_head udriv_map[HASHMAP_SIZE];
 static void init_udriv_map();
 static void add_udriv_to_map(udriv_struct_t *thr);
 static udriv_struct_t *create_udriv();
-static udriv_struct_t *get_udriv_from_id(int driver_id);
 static void remove_udriv_from_map(int driver_id);
 static int validate_port(driv_id_t driver_id, int port);
 static int validate_mem_range(driv_id_t driver_id, void *base_phys, int len);
@@ -115,6 +114,8 @@ int handle_udriv_register(void *arg_packet) {
 	}
 
 	udriv_struct_t *driv = create_udriv(driver_id);
+    driv->in_bytes = in_bytes;
+    driv->in_port = in_port;
 	if(driv == NULL) {
 		return ERR_FAILURE;
 	}
