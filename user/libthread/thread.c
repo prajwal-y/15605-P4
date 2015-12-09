@@ -50,7 +50,7 @@ static tcb_t *init_tcb(void *stack_base);
 int thr_init(unsigned int size) {
     int ret_val;
 
-    uninstall_seh();
+    //uninstall_seh();
     stack_size = size + STACK_PADDING(size);
 	ret_val = mutex_init(&tcb_lock);
     if (ret_val < 0) {
@@ -170,7 +170,7 @@ void thr_exit(void *status) {
  *  @return Void
  */
 void new_thread_init(void *(*func_addr)(void *), void *arg) {	
-    install_seh_multi();
+    //install_seh_multi();
     thr_exit(func_addr(arg));	/* in case thr_exit not called by programmer */
 }
 

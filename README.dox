@@ -65,7 +65,6 @@ User implementation
 Files changed/added:
 user/progs/serial_server.c
 user/progs/readline_server.c
-user/progs/print_server.c
 user/progs/keyboard_server.c
 user/libsyscall/key_circular_buffer.c
 user/inc/key_circular_buffer.h
@@ -77,8 +76,12 @@ key_circular_buffer to store characters received from the serial device.
 When we get a CR from the serial device, this indicates that a newline is 
 present and it sends a message to the readline server using the IPC library
 indicating availability of a new line and includes the new line in the message.
-The serial server launches the readline and print servers for the serial device
-it is responsible for.
+The serial server launches the readline (using fork) and print servers (using 
+the P2 thread library) for the serial device it is responsible for. The thread
+responsible for print server listens for print commands for the serial device.
+On receiving a print request it adds the characters to be printed to the 
+print buffer, which the serial device prints on receiving a "TX buffer empty"
+interrupt.
 
 Readline server: This server waits for requests from the readline client 
 (libipcgoo/readline.c) and whenever it receives a request it waits for a 
@@ -88,10 +91,6 @@ will get key presses from. If no parameter is passed the readline server
 launches the keyboard server (for listening to key presses from the main 
 keyboard). When the line is received from the keyboard/serial server the line
 is sent back to the client using IPC. 
-
-Print server: This server listens for print commands for the serial device.
-On receiving a print request it uses the udriv_outb system call to print to the
-serial device.
 
 Keyboard server: This server listens for interrupts from the keyboard and 
 performs the same functionality as the serial server when a newline is 

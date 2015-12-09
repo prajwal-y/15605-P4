@@ -94,7 +94,7 @@ int handle_udriv_register(void *arg_packet) {
 		return ERR_INVAL;
 	}
 
-	if(driver_id < UDR_MAX_HW_DEV) {
+	if(in_bytes != 0 && driver_id < UDR_MAX_HW_DEV) {
 		if(validate_port(driver_id, in_port) < 0) {
 			return ERR_INVAL;
 		}
@@ -238,7 +238,6 @@ int handle_udriv_wait(void *arg_packet) {
 	mutex_lock(&curr_thread->udriv_mutex);
 	if(!has_message(&curr_thread->interrupts)) {
 		mutex_unlock(&curr_thread->udriv_mutex);
-		disable_interrupts();
 		curr_thread->status = WAITING;
 		context_switch();
 	}
@@ -270,7 +269,7 @@ int handle_udriv_wait(void *arg_packet) {
  */
 int handle_udriv_inb(void *arg_packet) {
 	unsigned int port = (unsigned int)(*((int *)arg_packet));
-	unsigned char *val = (unsigned char *)(*(int *)arg_packet + 1);
+	unsigned char *val = (unsigned char *)(*((int *)arg_packet + 1));
     if (val != NULL && (is_pointer_valid(val, 1) < 0
         || is_memory_writable(val, 1) < 0)) {
         return ERR_INVAL;
@@ -289,7 +288,7 @@ int handle_udriv_inb(void *arg_packet) {
 			return 0;
 		}
 		temp = temp->next;
-	}	
+	}
 	return ERR_FAILURE;
 }
 
